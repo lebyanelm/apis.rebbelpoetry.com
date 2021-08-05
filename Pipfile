@@ -6,6 +6,12 @@ name = "pypi"
 [packages]
 mongoengine = "*"
 pymongo = "*"
+python-dotenv = "*"
+flask = "*"
+flask-cors = "*"
+nanoid = "*"
+jwt = "*"
+bcrypt = "*"
 
 [dev-packages]
 
