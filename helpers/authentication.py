@@ -1,5 +1,15 @@
 # dependencies
+import os
+import sys
 import jwt
+from datetime import datetime, timedelta
+from models.account import Account
+from flask import request
+
+
+# Helpers
+from helpers.response_messages import RESPONSE_MESSAGES
+
 
 """
 Helper functions to handle authentication
@@ -17,12 +27,16 @@ def is_authenticated(_request: request) -> bool:
 
         if authentication_method == 'Bearer':
             try:
-                print(authentication_data_split)
-                authentication_data_decoded = jwt.decode(authentication_data_split[1], os.environ['SECRET'], algorithms='HS256')
-                return True, authentication_data_decoded
+                token = authentication_data_split[1]
+                authentication_data_decoded = jwt.decode(token, os.environ['SECRET'],
+                    options={ "verify_signature": False, "verify_aud" : False, "verify_exp" : True })
+                return 200, authentication_data_decoded
             except:
-                print(sys.exc_info()[0])
-                return False, 'Invalid or expired authentication provided.'
+                error = sys.exc_info()[0]
+                if error == jwt.exceptions.ExpiredSignatureError:
+                    return 510, RESPONSE_MESSAGES[510]
+                else:
+                    return 403, RESPONSE_MESSAGES[403]
         else:
             return False, 'Unsupported authentication method.'
     else:
@@ -35,10 +49,6 @@ def sanitize_account(account: Account, is_allow_preferences = True) -> Account:
         del account['password']
     if account.get('verification_code') is not None:
         del account['verification_codes']
-    if account.get('allowed_messengers') is not None:
-        del account['allowed_messengers']
-    if account.get('messages') is not None:
-        del account['messages']
 
     if is_allow_preferences == False:
         if account.get('preferences') is not None:
@@ -49,6 +59,20 @@ def sanitize_account(account: Account, is_allow_preferences = True) -> Account:
 
 
 # -> Takes in a username and generates a Token for the username
-def generate_token(username: str) -> str:
-    return jwt.encode(
-        { 'username': username }, os.environ['SECRET'], algorithm="HS256")
+def generate_token(email_address: str) -> str:
+    token_issuer = os.environ['DEV_API_ENDPOINT']
+    if (os.environ['ENVIRONMENT'] == os.environ['PRODUCTION_MODE']):
+        token_issuer = os.environ['PROD_API_ENDPOINT']
+
+    now = datetime.utcnow()
+    # set the expiry of the token to be 14 days
+    expires = timedelta(days=14)
+    
+    return ' '.join(['Bearer', jwt.encode(
+        {
+            "email_address" : email_address,
+            "exp" : now + expires
+        },
+        os.environ['SECRET'],
+        algorithm="HS256")
+    ])

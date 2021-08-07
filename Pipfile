@@ -10,8 +10,8 @@ python-dotenv = "*"
 flask = "*"
 flask-cors = "*"
 nanoid = "*"
-jwt = "*"
 bcrypt = "*"
+pyjwt = "*"
 
 [dev-packages]
 

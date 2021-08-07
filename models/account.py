@@ -9,8 +9,11 @@ class Account(Data):
 	def __init__(self, data):
 		super().__init__()
 
+		del self.id
+
 		self.display_name = data['display_name']
 		self.email_address = data['email_address']
+		self.username = self.email_address.split('@')[0]
 		self.password = data['password']
 
 		if data.get('display_photo') is None:
@@ -71,6 +74,16 @@ class Account(Data):
 			self.notifications = []
 		else:
 			self.notifications = data['notifications']
+
+		if data.get('preferences') is None:
+			self.preferences = {}
+		else:
+			self.preferences = data['preferences']
+
+		if data.get('previous_usernames') is None:
+			self.previous_usernames = []
+		else:
+			self.previous_usernames = data['previous_usernames'];
 
 
 	def to_json(self) -> str:

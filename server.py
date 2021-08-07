@@ -43,7 +43,16 @@ CORS(server, resources={ r"*": { "origins": "*" } })
 @cross_origin()
 def create_user_account() -> str:
 	return AccountsController.create_user_account()
+
+@server.route("/api/@", methods=["GET"])
+@cross_origin()
+def reauthenticate_user_session():
+	return AccountsController.reauthenticate_user_session()
 	
+@server.route("/api/@/<username>", methods=["GET"])
+@cross_origin()
+def request_user_profile(username):
+	return AccountsController.request_user_profile(username)
 
 
 
