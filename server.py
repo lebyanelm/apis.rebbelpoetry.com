@@ -54,8 +54,12 @@ def reauthenticate_user_session():
 def request_user_profile(username):
 	return AccountsController.request_user_profile(username)
 
+@server.route("/api/authentication", methods=["GET"])
+@cross_origin()
+def request_user_authentication():
+	return AccountsController.request_user_authentication()
 
 
 ######### SET THE SERVER TO RUN #########
 IS_DEBUG_MODE = os.environ["ENVIRONMENT"] == os.environ["DEVELOPMENT_MODE"]
-server.run(debug=IS_DEBUG_MODE, host="0.0.0.0")
+server.run(debug=IS_DEBUG_MODE, host="localhost")

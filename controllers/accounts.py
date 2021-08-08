@@ -1,8 +1,10 @@
 # Dependencies
 import os
+import re
 import mongoengine
 import jwt
 import bcrypt
+import base64
 from flask import request
 from helpers.request import read_request_body, to_json
 from helpers.response_messages import RESPONSE_MESSAGES
@@ -71,9 +73,12 @@ def reauthenticate_user_session():
 	auth_code, auth_data = is_authenticated(request)
 	if auth_code == 200:
 		account = get_user(email_address=auth_data.get('email_address'))
-		response_data = sanitize_account(account);
+		if account:
+			response_data = sanitize_account(account)
 
-		return Response(auth_code, data=response_data).to_json()
+			return Response(auth_code, data=response_data).to_json()
+		else:
+			return Response(404).to_json()
 	else:
 		return Response(auth_code, reason=RESPONSE_MESSAGES[auth_code], message=auth_data).to_json()
 
@@ -102,3 +107,48 @@ def request_user_profile(username):
 		return Response(404).to_json()
 	return Response(200).to_json()
 
+
+"""
+When a user signs in to their account. If authentication is valid,
+generate a token and send it back for further easy authentication.
+"""
+def request_user_authentication():
+	try:
+		authorization_data = request.headers.get("Authorization")
+		if authorization_data:
+			authorization_data_split = authorization_data.split(' ')
+			authorization_method = authorization_data_split[0]
+			authorization_data = authorization_data_split[1]
+			if authorization_method == "Basic":
+				# decode the authentication data
+				authorization_data = base64.b64decode(authorization_data).decode("ascii").split(':')
+				authorization_username = authorization_data[0]
+				authorization_password = authorization_data[1]
+
+				# check if username is an email address or just a username
+				email_address_regex = r"^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$"
+				is_username_email_address = re.search(email_address_regex, authorization_username)
+
+				# find the user acccount using either the username or email address
+				if is_username_email_address:
+					user_account = get_user(email_address=authorization_username)
+				else:
+					user_account = get_user(username=authorization_username)
+
+				# verify the password given by the request
+				is_password_valid = bcrypt.checkpw(bytes(authorization_password, encoding="utf-8"), bytes(user_account["password"], encoding="utf-8"))
+				if is_password_valid:
+					authentication_token = generate_token(email_address=user_account["email_address"])
+					user_account = sanitize_account(user_account)
+					return Response(200, data={**user_account, "token" : authentication_token}).to_json()
+				else:
+					return Response(403, reason="Password or username incorrect, please check for typing mistakes.").to_json()
+				
+
+				return Response(200).to_json()
+			else:
+				return Response(501, reason=RESPONSE_MESSAGES[501]).to_json();
+		else:
+			return Response(403, reason=RESPONSE_MESSAGES[403]).to_json();
+	except:
+		return Response(500, reason=RESPONSE_MESSAGES[500])
