@@ -17,11 +17,12 @@ from helpers.poems import get_tag, update_tag
 # schema
 from schemas.tag import Tag as _Tag
 from schemas.account import Account as _Account
+from schemas.poem import Poem as _Poem
 
 
 def publish_a_poem():
 	request_data = read_request_body(request)
-	poem = Poem(request_data)
+	poem = _Poem(**Poem(request_data))
 
 	# from the poem, also try to extract some tags from the data provided.
 	# when the tags were provided by the author use them to make tags, else extract them from the body

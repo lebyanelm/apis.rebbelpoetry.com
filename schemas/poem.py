@@ -12,7 +12,7 @@ class Poem(Document):
 	collection = StringField()
 	languages = ListField()
 
-	read_time = InitField()
+	read_time = StringField()
 	commentation = ListField()
 	edits = ListField()
 	audio_syncing = DictField()
