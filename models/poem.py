@@ -72,7 +72,7 @@ class Poem(Data):
 		return result_languages
 
 	def get_read_time(self):
-		return readtime.of_text("We don’t know.")
+		return readtime.of_text(self.body)
 
 	def detect_keywords(self):
 		pass
