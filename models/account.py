@@ -83,8 +83,9 @@ class Account(Data):
 		if data.get('previous_usernames') is None:
 			self.previous_usernames = []
 		else:
-			self.previous_usernames = data['previous_usernames'];
+			self.previous_usernames = data['previous_usernames']
 
-
-	def to_json(self) -> str:
-		return json.dumps(obj=self.__dict__)
+		if data.get("_schema_version_") is None:
+			self._schema_version_ = 0.0
+		else:
+			self._schema_version_ = data["_schema_version_"]

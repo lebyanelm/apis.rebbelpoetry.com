@@ -12,6 +12,12 @@ flask-cors = "*"
 nanoid = "*"
 bcrypt = "*"
 pyjwt = "*"
+pillow = "*"
+polyglot = "*"
+pyicu = "*"
+numpy = "*"
+pycld2 = "*"
+readtime = "*"
 
 [dev-packages]
 
