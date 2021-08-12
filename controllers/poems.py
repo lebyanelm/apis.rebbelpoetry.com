@@ -22,15 +22,11 @@ from schemas.poem import Poem as _Poem
 
 def publish_a_poem():
 	request_data = read_request_body(request)
-	poem = _Poem(**Poem(request_data))
+	poem_data = Poem(request_data).__dict__
+	poem = _Poem(**poem_data)
 
-	# from the poem, also try to extract some tags from the data provided.
-	# when the tags were provided by the author use them to make tags, else extract them from the body
-	# try to extract them from the data items provided by the author
-	
-	
-	# make a tag on the database
-	for tag in poem.tags:
+	# save the tags on the database to be used for searching
+	for index, tag in enumerate(poem.tags):
 		tag_data = get_tag(tag)
 		
 		if tag_data == None:
@@ -40,13 +36,19 @@ def publish_a_poem():
 			tag.publishes_count = 1
 			
 			tag_schema = _Tag(**tag.__dict__)
+			poem.tags[index] = tag_schema._id
 			tag_schema.save()
 		else:
 			tag_data["publishes"].append(poem.id)
 			tag_data["publishes_count"] += 1
 
+			poem.tags[index] = tag_data["_id"]
+
 			# save the updated tag
 			update_tag(tag_data)
-	
-	return Response(200).to_json()
 
+	poem.save()
+	poem_data["_id"] = str(poem_data["_id"])
+	
+	# save the account in the database and return it to the user
+	return Response(200, data=poem_data).to_json()

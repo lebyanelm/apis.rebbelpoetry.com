@@ -1,6 +1,10 @@
 from mongoengine import Document, IntField, ListField, DictField, StringField, FloatField
 
 class Poem(Document):
+	id = StringField(required=False)
+	time_created = DictField()
+	last_modified = DictField()
+	
 	thumbnail = StringField()
 	title = StringField()
 	body = StringField()
@@ -11,6 +15,7 @@ class Poem(Document):
 	audio_file = StringField()
 	collection = StringField()
 	languages = ListField()
+	tags = ListField()
 
 	read_time = StringField()
 	commentation = ListField()
@@ -25,3 +30,5 @@ class Poem(Document):
 	comments = ListField()
 
 	_schema_version_ = FloatField()
+
+	meta = { "strict": False, "collection": "poems" }
