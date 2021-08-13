@@ -9,6 +9,7 @@ from flask_cors import CORS, cross_origin
 
 # models
 from models.response import Response
+from models.data import Data
 from models.report import Report
 
 
@@ -20,6 +21,7 @@ from schemas.report import Report as _Report
 import controllers.accounts as AccountsController
 import controllers.upload_resources as UploadsController
 import controllers.poems as PoemsController
+import controllers.comments as CommentsController
 
 
 # helpers
@@ -54,37 +56,43 @@ CORS(server, resources={ r"*": { "origins": "*" } })
 
 
 ########## ACCOUNT FACILITATION AND USER MANAGEMENT ##########
+"""CREATING POET ACCOUNTS"""
 @server.route("/api/poets", methods=["POST", "PUT"])
 @cross_origin()
 def create_user_account() -> str:
 	return AccountsController.create_user_account()
 
+"""""""GETTING POET ACCOUNTS"""""""
 @server.route("/api/poets", methods=["GET"])
 @cross_origin()
 def get_listed_poets():
 	return AccountsController.get_listed_poets()
 
+"""""""USER RE-AUTHENTICATION"""""""
 @server.route("/api/poets/reauthenticate", methods=["GET"])
 @cross_origin()
 @is_authenticated
 def reauthenticate_user_session():
 	return AccountsController.reauthenticate_user_session()
 
-@server.route("/api/poets/<email_address>", methods=["GET"])
-@cross_origin()
-def request_user_profile(email_address):
-	return AccountsController.request_user_profile(email_address)
-
+"""""""GET A POET PROFILE"""""""
 @server.route("/api/poets/<email_address>", methods=["PATCH"])
 @is_authenticated
 @cross_origin()
 def make_account_changes(email_address):
 	return AccountsController.make_account_changes(email_address)
 
+"""""""AUTHENTICATING A POET"""""""
 @server.route("/api/poets/authentication", methods=["GET"])
 @cross_origin()
 def request_user_authentication():
 	return AccountsController.request_user_authentication()
+
+"""""""USER RE-AUTHENTICATION"""""""
+@server.route("/api/poets/<email_address>", methods=["GET"])
+@cross_origin()
+def request_user_profile(email_address):
+	return AccountsController.request_user_profile(email_address)
 
 
 """
@@ -92,21 +100,21 @@ Upload resources manager.
 Handles file uploads and asset preview routes
 Also handles avatar/display_photo upload
 """
+"""""""UPLOADING RESOURCES"""""""
 @server.route("/api/assets/upload", methods=["POST", "PUT"])
 @cross_origin()
 @is_authenticated
 def handle_resource_upload():
 	return UploadsController.handle_resource_upload()
 
+"""""""GETTING AN UPLOADED RESOURCE"""""""
 @server.route("/api/uploads/<uploaded_resource>", methods=["GET"])
 @cross_origin()
 def get_upload_resource_urls(uploaded_resource):
 	return UploadsController.get_upload_resource_urls(uploaded_resource)
 
 
-"""
-Managing and publishing of poems.
-"""
+"""""""PUBLISHING POEMS"""""""
 @server.route("/api/publish", methods=["POST", "PUT"])
 @cross_origin()
 @is_authenticated
@@ -114,6 +122,7 @@ def publish_a_poem():
 	return PoemsController.publish_a_poem()
 
 
+"""""""UPDATING POEMS"""""""
 @server.route("/api/poems/<poem_id>", methods=["POST", "PUT", "PATCH"])
 @cross_origin()
 @is_authenticated
@@ -121,30 +130,67 @@ def update_poem_document(poem_id: str):
 	return PoemsController.edit_a_poem(poem_id)
 
 
-# Commentations on Poems
-@server.route("/api/poems/<poem_id>/comments", methods=["POST", "PUT"])
+"""""""DELETING A POEM"""""""
+@server.route("/api/poems/<poem_id>", methods=["DELETE"])
 @cross_origin()
 @is_authenticated
-def post_a_comment(poem_id: str):
-	return PoemsController.post_a_comment(poem_id)
+def delete_poem(poem_id):
+	return PoemsController.delete_poem(poem_id)
 
 
-# Reacting to a poem
+"""""""REACTING TO A POEM"""""""
 @server.route("/api/poems/<poem_id>/react/<reaction>", methods=["POST", "PUT"])
 @cross_origin()
 @is_authenticated
 def like_a_poem(poem_id, reaction):
 	return PoemsController.react_to_poem(poem_id, reaction)
 
-# Reacting to comment of a poem
+"""""""GETTING A POEM"""""""
+@server.route("/api/poems/<poem_id>", methods=["GET"])
+@cross_origin()
+def get_a_poem(poem_id):
+	poem = get_poem_document(poem_id)
+	if poem:
+		poem = Data.to_dict(poem)
+		poem["author"] = str(poem["author"])
+		
+		return Response(200, data=poem).to_json()
+	else:
+		return Response(404, reason="Poem was not found in record.").to_json()
+
+
+# Commentations on Poems
+"""""""POSTING COMMENTS ON POEMS"""""""
+@server.route("/api/poems/<poem_id>/comments", methods=["POST", "PUT"])
+@cross_origin()
+@is_authenticated
+def post_a_comment(poem_id: str):
+	return CommentsController.post_a_comment(poem_id)
+
+
+"""""""DELETING COMMENTS"""""""
+@server.route("/api/poems/comments/<comment_id>", methods=["DELETE"])
+@cross_origin()
+@is_authenticated
+def delete_a_comment(comment_id):
+	return CommentsController.delete_a_comment(comment_id)
+
+"""""""REACTING TO A COMMENT"""""""
 @server.route("/api/poems/comments/<comment_id>/react/<reaction>", methods=["POST", "PUT"])
 @cross_origin()
 @is_authenticated
 def react_to_comment(comment_id, reaction):
-	return PoemsController.react_to_comment(comment_id, reaction)
+	return CommentsController.react_to_comment(comment_id, reaction)
+
+"""""""TODO: UPDATE A COMMENT"""""""
+@server.route("/api/poems/comments/<comment_id>", methods=["POST", "PUT", "PATCH"])
+@cross_origin()
+@is_authenticated
+def edit_a_comment(comment_id):
+	return CommentsController.edit_a_comment(comment_id)
 
 
-# Reporting poems and comments: For racism / being disrespectful, etc.
+"""""""REPORTING CONTENT"""""""
 @server.route("/api/report/<content_type>/<content_id>", methods=["POST", "PUT"])
 @cross_origin()
 @is_authenticated

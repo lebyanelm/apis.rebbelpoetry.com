@@ -14,7 +14,10 @@ class Data:
         return json.dumps(obj=self.__dict__)
 
     def to_dict(self) -> dict:
-        new_self_dict = {**self.__dict__}
+        if type(self) != dict:
+            new_self_dict = {**self.__dict__}
+        else:
+            new_self_dict = {**self}
 
         if new_self_dict.get("_id"):
             new_self_dict["_id"] = str(new_self_dict["_id"])

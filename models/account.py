@@ -48,6 +48,12 @@ class Account(Data):
 		else:
 			self.recent_searches = data['recent_searches']
 
+		# a list of tags for determining the news feed of the poet / user
+		if data.get('interests') is None:
+			self.interests = []
+		else:
+			self.interests = data['interests']
+
 		if data.get('followers') is None:
 			self.followers = []
 		else:
