@@ -16,3 +16,6 @@ __pycache__/
 # Flask stuff:
 instance/
 .webassets-cache
+
+# Uploaded files:
+uploads/_*
