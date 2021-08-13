@@ -223,7 +223,7 @@ def react_to_comment(comment_id: str, reaction: str) -> str:
 			if reaction == "like":
 				comment["likes"].append(reactor_id)
 				comment["likes_count"] = len(comment["likes"])
-			elif reactor_id in comment["dislikes"]:
+			elif reaction == "dislike":
 				comment["dislikes"].append(reactor_id)
 				comment["dislikes_count"] = len(comment["dislikes"])
 
