@@ -148,7 +148,8 @@ def edit_a_comment(comment_id):
 		comment = get_from_collection(search_value=comment_id, search_key="_id", collection_name="comments")
 		if comment:
 			if comment["commentor"] == account["_id"]:
-				comment["body"] = request_data["body"]
+				if request_data.get("body"):
+					comment["body"] = request_data["body"]
 				is_comment_saved = update_a_document(document_changes=comment, collection_name="comments")
 				if is_comment_saved:
 					return Response(200).to_json()
