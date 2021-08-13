@@ -158,6 +158,6 @@ def edit_a_comment(comment_id):
 			else:
 				return Response(403, reason="You are not allowed to edit this comment.").to_json()
 		else:
-			return Response(404, reason="Your comment was not found in record.")
+			return Response(404, reason="Your comment was not found in record.").to_json()
 	else:
 		return Response(404, reason="Your account was not found in record.").to_json()
