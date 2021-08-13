@@ -9,9 +9,9 @@ def get_from_collection(search_value: str, collection_name="acccounts", search_k
 	cursor = collection.find({ search_key : search_value })
 
 	if return_all:
-		result = None
-	else:
 		result = []
+	else:
+		result = None
 
 	if cursor:
 		for _result in cursor:

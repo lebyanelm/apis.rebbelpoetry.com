@@ -6,8 +6,11 @@ import jwt
 import bcrypt
 import base64
 from flask import request, g
+
+
 from helpers.request import read_request_body, to_json, query_string_to_dict
 from helpers.response_messages import RESPONSE_MESSAGES
+from helpers.database import get_from_collection, update_a_document
 
 
 # Models
@@ -31,7 +34,6 @@ and facilitation.
 def create_user_account():
 	# Read the data sent in the request to verify it
 	request_data = read_request_body(request)
-	print(request_data)
 
 	# check if theres any data sent in the request
 	if request_data:
@@ -86,7 +88,6 @@ def get_listed_poets():
 	else:
 		start_count = 0
 	end_count = start_count + body_limit
-	print(start_count, end_count)
 
 	# get a cursor from MongoDB database
 	try:
@@ -146,6 +147,7 @@ def request_user_profile(email_address):
 		user_account_data = sanitize_account(user_account_data, is_allow_sensitive=False)
 
 		# send the data back
+		user_account_data = Account.to_dict(user_account_data)
 		return Response(200, data=user_account_data).to_json()
 	else:
 		return Response(404).to_json()
@@ -240,3 +242,22 @@ def make_account_changes(email_address: str) -> str:
 			return Response(400, reason="Error. Received empty request.").to_json()
 	except:
 		return Response(500).to_json()
+
+
+def get_poet_poems(poet_id):
+	poet = get_user(email_address=poet_id)
+	if poet:
+		poems = get_from_collection(search_value=poet["_id"], search_key="author", collection_name="poems", return_all=True)
+		# find and remove anonymous poems
+		for index, poem in enumerate(poems):
+			if poem.get("is_anonymous") == True:
+				poems.remove(poem)
+			else:
+				poems[index] = Account.to_dict(poem)
+				poems[index]["author"] = str(poems[index]["author"])
+
+		return Response(200, data=poems).to_json()
+	else:
+		return Response(404, reason="Account was not found in record.").to_json()
+
+	return Response(200).to_json()
