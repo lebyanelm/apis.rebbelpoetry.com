@@ -1,13 +1,19 @@
 # dependencies
 import os
+import bson
 import mongo_connection
 from dotenv import dotenv_values
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, g
 from flask_cors import CORS, cross_origin
 
 
 # models
-import models.response
+from models.response import Response
+from models.report import Report
+
+
+# schemas
+from schemas.report import Report as _Report
 
 
 # controllers
@@ -18,6 +24,9 @@ import controllers.poems as PoemsController
 
 # helpers
 from helpers.authentication import is_authenticated
+from helpers.poems import get_poem_document, update_poem_document
+from helpers.database import get_from_collection, update_a_document
+from helpers.request import read_request_body
 
 
 ####### SERVER ENVIRONMENTAL VARIABLES SETUP ##########
@@ -133,6 +142,48 @@ def like_a_poem(poem_id, reaction):
 @is_authenticated
 def react_to_comment(comment_id, reaction):
 	return PoemsController.react_to_comment(comment_id, reaction)
+
+
+# Reporting poems and comments: For racism / being disrespectful, etc.
+@server.route("/api/report/<content_type>/<content_id>", methods=["POST", "PUT"])
+@cross_origin()
+@is_authenticated
+def report_content(content_type, content_id):
+	request_data = read_request_body(request)
+	auth_data = g.my_request_var["payload"]
+
+	reporter = get_from_collection(search_value=auth_data["email_address"], search_key="email_address", collection_name="accounts")
+	if reporter:
+		if content_type == "poems" or content_type == "comments":
+			report_data = Report({
+				**request_data,
+				"reporter": reporter["_id"],
+				"content_type": content_type,
+				"of": bson.objectid.ObjectId(content_id) })
+			report = _Report(**{**report_data.__dict__, "_id": bson.objectid.ObjectId()})
+				
+			if content_type == "poems":
+				content_data = get_poem_document(content_id)
+			else:
+				content_data = get_from_collection(search_value=content_id, search_key="_id", collection_name="comments")
+
+			content_data["reports"].append(report._id)
+			content_data["reports_count"] = len(content_data["reports"])
+
+			# save the report and update the reported content
+			report.save()
+			update_a_document(document_changes=content_data, collection_name=content_type)
+
+			# prepare the response
+			response_data = { **report_data.__dict__, "_id": str(report._id) }
+			response_data["of"] = str(response_data["of"])
+			response_data["reporter"] = str(response_data["reporter"])
+			
+			return Response(200, data=response_data).to_json()
+		else:
+			return Response(400, reason="Unknown content type to be reported.").to_json()
+	else:
+		return Response(404, reason="Your account was not found in record.").to_json()
 
 
 ######### SET THE SERVER TO RUN #########

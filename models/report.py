@@ -6,3 +6,4 @@ class Report(Data):
 		self.of = data["of"]
 		self.reason = data["reason"]
 		self.reporter = data["reporter"]
+		self.description = data["description"]
