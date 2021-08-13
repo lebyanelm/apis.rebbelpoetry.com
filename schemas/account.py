@@ -1,16 +1,20 @@
-from mongoengine import Document, StringField, ListField, DictField, BooleanField, IntField
+from mongoengine import Document, StringField, ListField, DictField, BooleanField, IntField, FloatField, ObjectIdField
 import mongoengine
 
 class Account(Document):
+    _id = ObjectIdField(required=False)
+
     email_address = StringField(unique=True)
     display_name = StringField()
     username = StringField()
     password = StringField()
 
-    id = StringField(required=False)
     time_created = DictField()
+    last_modified = DictField()
+
     display_photo = StringField()
     poems = ListField()
+    featured_poems = ListField()
     archived_poems = ListField()
     bookmarked_poems = ListField()
     drafts = ListField()
@@ -22,5 +26,7 @@ class Account(Document):
     notifications = ListField()
     preferences = DictField()
     previous_usernames = ListField()
+
+    _schema_version_ = FloatField()
 
     meta = {"strict": False, "collection": "accounts"}

@@ -9,8 +9,6 @@ class Account(Data):
 	def __init__(self, data):
 		super().__init__()
 
-		del self.id
-
 		self.display_name = data['display_name']
 		self.email_address = data['email_address']
 		self.username = self.email_address.split('@')[0]
@@ -29,6 +27,11 @@ class Account(Data):
 			self.poems = []
 		else:
 			self.poems = data['poems']
+
+		if data.get('featured_poems') is None:
+			self.featured_poems = []
+		else:
+			self.featured_poems = data['featured_poems']
 
 		if data.get('archived_poems') is None:
 			self.archived_poems = []

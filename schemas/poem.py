@@ -1,7 +1,9 @@
-from mongoengine import Document, IntField, ListField, DictField, StringField, FloatField
+from mongoengine import Document, IntField, ListField, DictField, StringField, FloatField, ObjectIdField
+from bson.objectid import ObjectId
+
 
 class Poem(Document):
-	id = StringField(required=False)
+	_id = ObjectIdField()
 	time_created = DictField()
 	last_modified = DictField()
 	
@@ -9,7 +11,7 @@ class Poem(Document):
 	title = StringField()
 	body = StringField()
 	description = StringField()
-	author = StringField()
+	author = ObjectIdField()
 
 	featured_poets = ListField()
 	audio_file = StringField()
@@ -18,16 +20,21 @@ class Poem(Document):
 	tags = ListField()
 
 	read_time = StringField()
-	commentation = ListField()
+	annotations = ListField()
 	edits = ListField()
 	audio_syncing = DictField()
 
 	bookmarks_count = IntField()
+	likes = ListField()
 	likes_count = IntField()
+	dislikes = ListField()
+	dislikes_count = IntField()
 	shares_count = IntField()
 	views_count = IntField()
 	comments_count = IntField()
 	comments = ListField()
+	reports = ListField()
+	reports_count = IntField()
 
 	_schema_version_ = FloatField()
 

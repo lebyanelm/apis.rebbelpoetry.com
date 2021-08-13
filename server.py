@@ -57,6 +57,7 @@ def get_listed_poets():
 
 @server.route("/api/poets/reauthenticate", methods=["GET"])
 @cross_origin()
+@is_authenticated
 def reauthenticate_user_session():
 	return AccountsController.reauthenticate_user_session()
 
@@ -66,6 +67,7 @@ def request_user_profile(email_address):
 	return AccountsController.request_user_profile(email_address)
 
 @server.route("/api/poets/<email_address>", methods=["PATCH"])
+@is_authenticated
 @cross_origin()
 def make_account_changes(email_address):
 	return AccountsController.make_account_changes(email_address)
@@ -96,11 +98,41 @@ def get_upload_resource_urls(uploaded_resource):
 """
 Managing and publishing of poems.
 """
-@server.route("/api/poems", methods=["POST", "PUT"])
+@server.route("/api/publish", methods=["POST", "PUT"])
 @cross_origin()
 @is_authenticated
 def publish_a_poem():
 	return PoemsController.publish_a_poem()
+
+
+@server.route("/api/poems/<poem_id>", methods=["POST", "PUT", "PATCH"])
+@cross_origin()
+@is_authenticated
+def update_poem_document(poem_id: str):
+	return PoemsController.edit_a_poem(poem_id)
+
+
+# Commentations on Poems
+@server.route("/api/poems/<poem_id>/comments", methods=["POST", "PUT"])
+@cross_origin()
+@is_authenticated
+def post_a_comment(poem_id: str):
+	return PoemsController.post_a_comment(poem_id)
+
+
+# Reacting to a poem
+@server.route("/api/poems/<poem_id>/react/<reaction>", methods=["POST", "PUT"])
+@cross_origin()
+@is_authenticated
+def like_a_poem(poem_id, reaction):
+	return PoemsController.react_to_poem(poem_id, reaction)
+
+# Reacting to comment of a poem
+@server.route("/api/poems/comments/<comment_id>/react/<reaction>", methods=["POST", "PUT"])
+@cross_origin()
+@is_authenticated
+def react_to_comment(comment_id, reaction):
+	return PoemsController.react_to_comment(comment_id, reaction)
 
 
 ######### SET THE SERVER TO RUN #########

@@ -2,6 +2,7 @@
 import os
 import sys
 import jwt
+import traceback
 from functools import wraps
 from datetime import datetime, timedelta
 from models.account import Account
@@ -40,7 +41,7 @@ def is_authenticated(fn) -> bool:
                     g.my_request_var["payload"] = authentication_data_decoded
                     return fn(*args, **kwargs)
                 except:
-                    error = sys.exc_info()[1]
+                    error = traceback.format_exc()
                     print(error)
                     if error == jwt.exceptions.ExpiredSignatureError:
                         return Response(510, reason="Authentication expired.").to_json()

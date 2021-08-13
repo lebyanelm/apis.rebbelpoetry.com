@@ -1,5 +1,10 @@
 import os
+import bson
 import mongoengine
+
+
+from helpers.database import get_from_collection, update_a_document
+
 
 def parse_poem_tags_string(tags):
 	_tags = []
@@ -12,34 +17,19 @@ def parse_poem_tags_string(tags):
 	return _tags
 
 
-def get_tag(tag_name: str):
-	tags_collection = mongoengine.get_connection().get_database(os.environ["DATABASE_NAME"]).get_collection("tags")
-	tag_cursor = tags_collection.find({ "name" : tag_name })
-	tag = None
-
-	if tag_cursor:
-		for _tag in tag_cursor:
-			tag = _tag
-			break
-
-	return tag
+def get_poem_document(poem_id: str):
+	poem_document = get_from_collection(search_value=bson.objectid.ObjectId(poem_id), search_key="_id", collection_name="poems")
+	return poem_document
 
 
-def update_tag(tag_changes):
-	try:
-		tags_collection = mongoengine.get_connection().get_database(os.environ["DATABASE_NAME"]).get_collection("tags")
+def update_poem_document(poem_changes):
+	return update_a_document(document_changes=poem_changes, collection_name="poems")
 
-		tag_object_id = tag_changes["_id"]
-		del tag_changes["_id"]
 
-		tags_collection.find_one_and_update(
-			{ "_id" : tag_object_id },
-			{ "$set" : tag_changes }
-		)
+def get_tag_document(tag_name: str):
+	tag_document = get_from_collection(search_value=tag_name, search_key="name", collection_name="tags")
+	return tag_document
 
-		tag_changes["_id"] = tag_object_id
 
-		return True
-	except:
-		print(sys.exc_info()[1])
-		return False
+def update_tag_document(tag_changes):
+	return update_a_document(tag_changes, collection_name="tags")
