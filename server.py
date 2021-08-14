@@ -28,7 +28,7 @@ import controllers.comments as CommentsController
 from helpers.authentication import is_authenticated
 from helpers.poems import get_poem_document, update_poem_document
 from helpers.database import get_from_collection, update_a_document
-from helpers.request import read_request_body
+from helpers.request import read_request_body, query_string_to_dict
 
 
 ####### SERVER ENVIRONMENTAL VARIABLES SETUP ##########
@@ -142,6 +142,15 @@ def update_poem_document(poem_id: str):
 @is_authenticated
 def delete_poem(poem_id):
 	return PoemsController.delete_poem(poem_id)
+
+
+"""""""GETTING POEM COMMENTS"""""""
+@server.route("/api/poems/<poem_id>/comments", methods=["GET"])
+@cross_origin()
+@is_authenticated
+def get_poem_comments(poem_id):
+	query_params = query_string_to_dict(request.query_string.decode("ascii"))
+	return CommentsController.get_poem_comments(poem_id, query_params.get("start"), query_params.get("limit"))
 
 
 """""""REACTING TO A POEM"""""""

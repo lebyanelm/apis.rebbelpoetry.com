@@ -161,3 +161,29 @@ def edit_a_comment(comment_id):
 			return Response(404, reason="Your comment was not found in record.").to_json()
 	else:
 		return Response(404, reason="Your account was not found in record.").to_json()
+
+	
+def get_poem_comments(poem_id, start = 0, limit = 10):
+	poem_id = bson.objectid.ObjectId(poem_id)
+	comments = get_from_collection(search_value=poem_id, search_key="of", collection_name="comments", return_all=True)
+
+	if start is None:
+		start = 0
+	if limit is None:
+		limit = 10
+	end = int(start) + int(limit)
+	if len(comments):
+		response_comments = comments[start : end]
+		# make the data response ready
+		for index, response_comment in enumerate(response_comments):
+			response_comments[index] = Comment.to_dict(response_comments[index])
+			response_comments[index]["_id"] = str(response_comments[index]["_id"])
+			response_comments[index]["of"] = str(response_comments[index]["of"])
+			response_comments[index]["commentor"] = str(response_comments[index]["of"])
+			if response_comments[index].get("reply_of"):
+				response_comments[index]["reply_of"] = str(response_comments[index]["reply_of"])
+
+		return Response(200, data=response_comments).to_json()
+	else:
+		return Response(200, data=[]).to_json()
+		
