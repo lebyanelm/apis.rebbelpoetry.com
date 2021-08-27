@@ -11,6 +11,7 @@ from flask import request, g
 from models.poem import Poem
 from models.response import Response
 from models.tag import Tag
+from models.draft import Draft
 
 
 # helpers
@@ -22,6 +23,7 @@ from helpers.database import get_from_collection, update_a_document, delete_docu
 # schema
 from schemas.tag import Tag as _Tag
 from schemas.poem import Poem as _Poem
+from schemas.draft import Draft as _Draft
 
 
 """""""""PUBLISHING POEMS"""""""""
@@ -178,3 +180,78 @@ def react_to_poem(poem_id, reaction):
 			return Response(404, reason="Poem was not found in record. It may have been deleted.").to_json()
 	else:
 		return Response(404, reason="Your account was not found in record.").to_json()
+
+
+# Be able to rank poems from the most liked to the most disliked for a user that is not logged in
+def unauthenticated_poemsfeed():
+	poems = get_from_collection(search_value=None, collection_name="poems", return_all=True)
+	recommended_poems = []
+
+	# rank the poems
+	for poem in poems:
+		# recommend a poem if the likes are more than the dislikes, with an offset difference of 20
+		if poem["likes_count"] > (poem["dislikes_count"] - 20):
+			recommended_poems.append(poem)
+
+	# if the recommended_poems has no items, return all poems
+	if len(recommended_poems) == 0:
+		recommended_poems = poems
+
+	# prepare the response
+	for index, poem in enumerate(recommended_poems):
+		recommended_poems[index] = Poem.to_dict(recommended_poems[index])
+		recommended_poems[index]["_id"] = str(recommended_poems[index]["_id"])
+		recommended_poems[index]["author"] = str(recommended_poems[index]["author"])
+
+	return Response(200, data=recommended_poems).to_json()
+
+
+"""DRAFTING POEMS"""
+def create_a_draft():
+	auth_data = g.my_request_var["payload"]
+	author = get_from_collection(search_value=auth_data["email_address"], search_key="email_address", collection_name="accounts")
+	if author:
+		request_data = read_request_body(request=request)
+		if request_data:
+			draft = get_from_collection(search_value=request_data.get("did"), search_key="did", collection_name="drafts")
+			if draft:
+				print("Draft exists.")
+				draft = { **draft, **request_data }
+				print(draft["title"], draft["body"], request_data)
+				is_draft_saved = update_a_document(document_changes=draft, collection_name="drafts")
+				if is_draft_saved:
+					return Response(200).to_json()
+				else:
+					return Response(500, reason="Something went wrong while saving the draft.")
+			else:
+				print("New draft.")
+				draft_data = Draft(request_data)
+				draft = _Draft(**draft_data.__dict__)
+				author["drafts"].append(draft._id)
+				is_author_saved = update_a_document(document_changes=author, collection_name="accounts")
+				print(is_author_saved)
+				if is_author_saved:
+					draft.save()
+					return Response(200).to_json()
+				else:
+					return Response(500, reason="Something went wrong while saving the draft.").to_json()
+		else:
+			return Response(400, reason="Incomplete request. No data was received.").to_json()
+	else:
+		return Response(403, reason="You are not allowed to carry out this action.").to_json()
+
+
+"""GETTING A DRAFT POEM"""
+def get_a_draft(did: str) -> str:
+	auth_data = g.my_request_var["payload"]
+	author = get_from_collection(search_value=auth_data["email_address"], search_key="email_address", collection_name="accounts")
+	if author:
+		draft_document = get_from_collection(search_value=did, search_key="did", collection_name="drafts")
+		print(draft_document)
+		if draft_document:
+			draft_document = Poem.to_dict(draft_document)
+			return Response(200, data=draft_document).to_json()
+		else:
+			return Response(404, reason="Draft does not exist in record.").to_json()
+	else:
+		return Response(404, reason="Original author was not found in record.").to_json()

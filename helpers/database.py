@@ -6,7 +6,10 @@ import mongoengine
 
 def get_from_collection(search_value: str, collection_name="acccounts", search_key="_id", return_all=False):
 	collection = mongoengine.get_connection().get_database(os.environ["DATABASE_NAME"]).get_collection(collection_name)
-	cursor = collection.find({ search_key : search_value })
+	if search_value:
+		cursor = collection.find({ search_key : search_value })
+	else:
+		cursor = collection.find({  })
 
 	if return_all:
 		result = []

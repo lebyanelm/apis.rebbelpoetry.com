@@ -57,49 +57,63 @@ CORS(server, resources={ r"*": { "origins": "*" } })
 
 ########## ACCOUNT FACILITATION AND USER MANAGEMENT ##########
 """CREATING POET ACCOUNTS"""
-@server.route("/api/poets", methods=["POST", "PUT"])
+@server.route("/api/rebbels", methods=["POST", "PUT"])
 @cross_origin()
 def create_user_account() -> str:
 	return AccountsController.create_user_account()
 
 """""""USER RE-AUTHENTICATION"""""""
-@server.route("/api/poets/reauthenticate", methods=["GET"])
+@server.route("/api/rebbels/reauthenticate", methods=["GET"])
 @cross_origin()
 @is_authenticated
 def reauthenticate_user_session():
 	return AccountsController.reauthenticate_user_session()
 
 """""""UPDATE A POET PROFILE"""""""
-@server.route("/api/poets/<email_address>", methods=["PATCH"])
+@server.route("/api/rebbels/<email_address>", methods=["PATCH"])
 @is_authenticated
 @cross_origin()
 def make_account_changes(email_address):
 	return AccountsController.make_account_changes(email_address)
 
 """""""AUTHENTICATING A POET"""""""
-@server.route("/api/poets/authentication", methods=["GET"])
+@server.route("/api/rebbels/authentication", methods=["GET"])
 @cross_origin()
 def request_user_authentication():
 	return AccountsController.request_user_authentication()
 
 """""""GETTING POET ACCOUNTS"""""""
-@server.route("/api/poets", methods=["GET"])
+@server.route("/api/rebbels", methods=["GET"])
 @cross_origin()
 def get_listed_poets():
 	return AccountsController.get_listed_poets()
 
 """""""GET A POET PROFILE"""""""
-@server.route("/api/poets/<email_address>", methods=["GET"])
+@server.route("/api/rebbels/<username>", methods=["GET"])
 @cross_origin()
-def request_user_profile(email_address):
-	return AccountsController.request_user_profile(email_address)
+def request_user_profile(username):
+	return AccountsController.request_user_profile(username)
 
 """""""GETTING A POET PUBLISHED POEMS"""""""
-@server.route("/api/poets/<email_address>/poems", methods=["GET"])
+@server.route("/api/rebbels/<email_address>/poems", methods=["GET"])
 @is_authenticated
 @cross_origin()
 def get_poet_poems(email_address):
 	return AccountsController.get_poet_poems(email_address)
+
+
+"""""""GET A SUMMARY OF AUTHORS OF A POEM"""""""
+@server.route("/api/authors/<author_ids>", methods=["GET"])
+@cross_origin()
+def get_listed_author(author_ids):
+	return AccountsController.get_listed_author(author_ids)
+
+
+"""""""GETTING A NEWS FEED OF A USER NOT LOGGED IN"""""""
+@server.route("/api/poems/feed", methods=["GET"])
+@cross_origin()
+def unauthenticated_poemsfeed():
+	return PoemsController.unauthenticated_poemsfeed()
 
 """
 Upload resources manager.
@@ -117,7 +131,12 @@ def handle_resource_upload():
 @server.route("/api/uploads/<uploaded_resource>", methods=["GET"])
 @cross_origin()
 def get_upload_resource_urls(uploaded_resource):
-	return UploadsController.get_upload_resource_urls(uploaded_resource)
+	print(uploaded_resource != "default-avatar.png")
+	if uploaded_resource != "default-avatar.png":
+		return UploadsController.get_upload_resource_urls(uploaded_resource)
+	else:
+		default_avatar_path = "/".join([os.getcwd(), "uploads", "default-avatar.png"])
+		return send_file(default_avatar_path)
 
 
 """""""PUBLISHING POEMS"""""""
@@ -142,6 +161,22 @@ def update_poem_document(poem_id: str):
 @is_authenticated
 def delete_poem(poem_id):
 	return PoemsController.delete_poem(poem_id)
+
+
+"""""""DRAFTING A POEM"""""""
+@server.route("/api/drafts", methods=["POST"])
+@cross_origin()
+@is_authenticated
+def create_a_draft():
+	return PoemsController.create_a_draft()
+
+
+"""""""GETTING A POEM DRAFT"""""""
+@server.route("/api/drafts/<did>", methods=["GET"])
+@cross_origin()
+@is_authenticated
+def get_a_draft(did: str):
+	return PoemsController.get_a_draft(did)
 
 
 """""""GETTING POEM COMMENTS"""""""

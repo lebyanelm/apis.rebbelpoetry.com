@@ -1,8 +1,8 @@
 from mongoengine import Document, IntField, ListField, DictField, StringField, FloatField, ObjectIdField
 from bson.objectid import ObjectId
 
-
-class Poem(Document):
+class Draft(Document):
+	did = StringField(required=True)
 	_id = ObjectIdField()
 	time_created = DictField()
 	last_modified = DictField()
@@ -35,5 +35,4 @@ class Poem(Document):
 	reports_count = IntField()
 
 	_schema_version_ = FloatField()
-
-	meta = { "strict": False, "allow_inheritance": True, "collection": "poems" }
+	meta = { "strict": False, "collection": "drafts" }

@@ -1,6 +1,7 @@
 # Dependencies
 import os
 import re
+import bson
 import mongoengine
 import jwt
 import bcrypt
@@ -81,32 +82,70 @@ def get_listed_poets():
 		body_limit = int(request_query_params["limit"])
 	else:
 		body_limit = 10
+
 	if request_query_params.get("start"):
-		start_count = int(request_query_params["start"])
-		if (start_count != 0):
-			start_count -= 1
+		if request_query_params["start"] == "undefined":
+			request_query_params["start"] = 1
+		start_count = int(request_query_params["start"]) - 1
+		if start_count != 0:
+			start_count = start_count * body_limit
 	else:
 		start_count = 0
+
 	end_count = start_count + body_limit
+	print(start_count, end_count)
 
 	# get a cursor from MongoDB database
 	try:
 		# -> get the connection instance from the mongoengine and get the database pointer to read from it
 		collection = mongoengine.get_connection().get_database(name=os.environ["DATABASE_NAME"]).get_collection('accounts')
-		poets_cursor = collection.find()[start_count:end_count]
+		poets_cursor = collection.find()
 		results = []
 
-		for poet in poets_cursor:
+		# Count how many total results can be retrieved
+		total_count = poets_cursor.count()
+
+		for poet in poets_cursor[start_count:end_count]:
 			result = sanitize_account(poet, is_allow_sensitive=False)
+			# Remove the ObjectIds attached in the document
+			result = Account.to_dict(result)
+			
 			results.append(result)
 		
-		return Response(200, data=results).to_json()
+		pages_left = int(total_count / body_limit)
 
-		return Response(200).to_json()
+		return Response(200, data={"rebbels": results, "total_count": pages_left }).to_json()
 
 	except mongoengine.connection.ConnectionFailure as error:
 		print('Connection Error', error)
 		return False
+
+
+"""
+Returns a list of author details.
+This list will be determined by the IDs
+parsed in as an argument
+"""
+def get_listed_author(author_ids) -> str:
+	author_ids = author_ids.rsplit(",")
+	documents = list()
+
+	for index, author_id in enumerate(author_ids):
+		author_ids[index] = bson.objectid.ObjectId(author_ids[index])
+		document = get_from_collection(search_key="_id", search_value=author_ids[index], collection_name="accounts")
+		
+		if document:
+			documents.append({
+				"display_name": document["display_name"],
+				"display_photo": document["display_photo"],
+				"follows": len(document["follows"]),
+				"followers": len(document["followers"]),
+				"poems": len(document["poems"]),
+				"username": document["username"],
+				"biography": document["biography"] })
+	
+	return Response(200, data=documents).to_json()
+
 
 """
 Tokens a generated to expire after a certain period.
@@ -123,7 +162,7 @@ def reauthenticate_user_session():
 			**sanitize_account(account),
 			"token": new_token
 		}
-		return Response(200, data=response_data).to_json()
+		return Response(200, data=Account.to_dict(response_data)).to_json()
 	else:
 		return Response(404).to_json()
 
@@ -135,8 +174,8 @@ Requesting a user account from the database. Usually when showing a preview
 of a profile or a whole profile on it's own. Anonymous poems by the user will
 be hidden in the public eye. No authentication is required.
 """
-def request_user_profile(email_address):
-	user_account_data = get_user(email_address=email_address)
+def request_user_profile(username):
+	user_account_data = get_user(username=username)
 	if user_account_data:
 		# hide all poems that are published anonymously by this user before sending the data
 		for poem in user_account_data['poems']:
@@ -187,6 +226,7 @@ def request_user_authentication():
 					if is_password_valid:
 						authentication_token = generate_token(email_address=user_account["email_address"])
 						user_account = sanitize_account(user_account)
+						user_account = Account.to_dict(user_account)
 						return Response(200, data={**user_account, "token" : authentication_token}).to_json()
 					else:
 						return Response(403, reason="Password or username incorrect, please check for typing mistakes.").to_json()

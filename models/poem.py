@@ -18,7 +18,7 @@ from helpers.poems import parse_poem_tags_string, get_tag_document, update_tag_d
 
 
 class Poem(Data):
-	def __init__(self, data):
+	def __init__(self, data, is_draft=False):
 		super().__init__()
 
 		self._id = bson.objectid.ObjectId()
@@ -34,15 +34,12 @@ class Poem(Data):
 		self.languages = data.get("language")
 
 
-		if self.languages == None:
+		if self.languages == None and is_draft == False:
 			# automatically detect the languages
 			self.languages = self.detect_language()
 
 		# default values
 		self.read_time = self.get_read_time().__str__()
-		self.annotations = []
-		self.edits = []
-		self.audio_syncing = {}
 		self.bookmarks_count = 0
 		self.likes = []
 		self.likes_count = 0
@@ -62,9 +59,6 @@ class Poem(Data):
 		
 		if self.audio_file:
 			other_possible_tags.append("audio")
-
-		if len(self.annotations):
-			other_possible_tags.append("annotations")
 		
 		if self.collection:
 			other_possible_tags.append("collection")

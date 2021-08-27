@@ -19,6 +19,7 @@ class Account(Document):
     bookmarked_poems = ListField()
     drafts = ListField()
     recent_searches = ListField()
+    interests = ListField()
     followers = ListField()
     follows = ListField()
     biography = StringField()

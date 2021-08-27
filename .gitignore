@@ -19,4 +19,4 @@ instance/
 .webassets-cache
 
 # Uploaded files:
-uploads/_*
+uploads/*
