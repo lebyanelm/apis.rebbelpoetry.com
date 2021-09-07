@@ -49,7 +49,7 @@ def update_a_document(document_changes, collection_name="accounts"):
 		return False
 
 
-def delete_documents(search_value: str, search_key="_id", collection_name="accounts"):
+def delete_from_collection(search_value: str, search_key="_id", collection_name="accounts"):
 	try:
 		collection = mongoengine.get_connection().get_database(os.environ["DATABASE_NAME"]).get_collection(collection_name)
 

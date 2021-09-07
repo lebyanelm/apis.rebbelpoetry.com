@@ -140,11 +140,11 @@ def get_upload_resource_urls(uploaded_resource):
 
 
 """""""PUBLISHING POEMS"""""""
-@server.route("/api/publish", methods=["POST", "PUT"])
+@server.route("/api/publish/<did>", methods=["POST", "PUT"])
 @cross_origin()
 @is_authenticated
-def publish_a_poem():
-	return PoemsController.publish_a_poem()
+def publish_a_poem(did: str):
+	return PoemsController.publish_a_poem(did)
 
 
 """""""UPDATING POEMS"""""""
@@ -203,7 +203,7 @@ def get_a_poem(poem_id):
 	if poem:
 		poem = Data.to_dict(poem)
 		poem["author"] = str(poem["author"])
-		
+
 		return Response(200, data=poem).to_json()
 	else:
 		return Response(404, reason="Poem was not found in record.").to_json()
@@ -257,7 +257,7 @@ def report_content(content_type, content_id):
 				"content_type": content_type,
 				"of": bson.objectid.ObjectId(content_id) })
 			report = _Report(**{**report_data.__dict__, "_id": bson.objectid.ObjectId()})
-				
+
 			if content_type == "poems":
 				content_data = get_poem_document(content_id)
 			else:
@@ -274,7 +274,7 @@ def report_content(content_type, content_id):
 			response_data = { **report_data.__dict__, "_id": str(report._id) }
 			response_data["of"] = str(response_data["of"])
 			response_data["reporter"] = str(response_data["reporter"])
-			
+
 			return Response(200, data=response_data).to_json()
 		else:
 			return Response(400, reason="Unknown content type to be reported.").to_json()

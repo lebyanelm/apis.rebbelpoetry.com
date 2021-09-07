@@ -14,7 +14,7 @@ from schemas.comment import Comment as _Comment
 # helpers
 from helpers.request import read_request_body
 from helpers.poems import get_poem_document, update_poem_document, get_tag_document, update_tag_document
-from helpers.database import get_from_collection, update_a_document, delete_documents
+from helpers.database import get_from_collection, update_a_document, delete_from_collection
 
 
 """""""""POSTING COMMENTS"""""""""
@@ -121,7 +121,7 @@ def delete_a_comment(comment_id):
 					poem["comments"].remove(comment["_id"])
 					poem["comments_count"] = len(poem["comments"])
 
-				is_comment_deleted = delete_documents(search_value=comment_id, search_key="_id", collection_name="comments")
+				is_comment_deleted = delete_from_collection(search_value=comment_id, search_key="_id", collection_name="comments")
 				if is_comment_deleted:
 					# update the poem in the poems
 					is_poem_saved = update_poem_document(poem)

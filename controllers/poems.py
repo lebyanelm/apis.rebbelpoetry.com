@@ -17,7 +17,7 @@ from models.draft import Draft
 # helpers
 from helpers.request import read_request_body
 from helpers.poems import get_poem_document, update_poem_document, get_tag_document, update_tag_document
-from helpers.database import get_from_collection, update_a_document, delete_documents
+from helpers.database import get_from_collection, update_a_document, delete_from_collection
 
 
 # schema
@@ -27,36 +27,51 @@ from schemas.draft import Draft as _Draft
 
 
 """""""""PUBLISHING POEMS"""""""""
-def publish_a_poem():
-	request_data = read_request_body(request)
-	if request_data:
-		poem_data = Poem(request_data)
-		poem = _Poem(**poem_data.__dict__)
-		featured_poets_not_found = []
+def publish_a_poem(did):
+	publisher_payload = g.my_request_var["payload"]
+	publisher = get_from_collection(search_key="email_address", search_value=publisher_payload["email_address"], collection_name="accounts")
 
-		# parse the featured poets and author and turn them into IDs
-		author = get_from_collection(search_value=poem.author, search_key="email_address", collection_name="accounts")
-		if author:
-			poem.author = author["_id"]
-			author["poems"].append(poem._id)
-			# also parse the featured poets
-			for index, featured_poet in enumerate(poem.featured_poets):
-				featured_poet = get_from_collection(search_value=bson.objectid.ObjectId(featured_poet), search_key="_id", collection_name="accounts")
-				if featured_poet:
-					poem.featured_poets[index] = featured_poet["_id"]
-					featured_poet["featured_poems"].append(poem._id)
-					update_a_document(document_changes=featured_poet, collection_name="accounts")
-				else:
-					featured_poets_not_found.append(featured_poet_email)
-			# save the poem and author account in the database and return it to the user
+	if publisher:
+		draft_data = get_from_collection(search_key="did", search_value=did, collection_name="drafts")
+		if draft_data:
+			request_data = read_request_body(request)
+			request_tags = request_data.get("tags")
+
+			if not request_tags:
+				request_tags = []
+
+			else:
+				for index, tag in enumerate(request_tags):
+					if tag != "":
+						request_tags[index] = tag.strip().lower()
+					else:
+						del request_tags[index]
+
+			draft_data["tags"] = request_tags
+			if not request_data["is_anonymous"]:
+				draft_data["author"] = publisher["_id"]
+
+			poem_data = Poem(draft_data)
+			poem = _Poem(**poem_data.__dict__)
+
 			poem.save()
-			update_a_document(document_changes=author, collection_name="accounts")
 
-			return Response(200, data=poem_data.to_dict()).to_json()
+			# delete the draft since it's now published as a poem
+			is_deleted = delete_from_collection(search_key="did", search_value=did, collection_name="drafts")
+			if is_deleted:
+				for index, draft in enumerate(publisher["drafts"]):
+					if draft == draft_data["_id"]:
+						del publisher["drafts"][index]
+						# Append it to the list of poems published by the author
+						publisher["poems"].append(poem._id)
+						update_a_document(publisher, collection_name="accounts")
+
+			return Response(200, data=str(poem._id)).to_json()
 		else:
-			return Response(404, reason="Author does not exist.").to_json()
+			return Response(400, reason="Draft not found in record.").to_json()
 	else:
-		return Response(400, reason="Incomplete or missing data.").to_json()
+		return Response(400, reason="Publisher account not found in record.").to_json()
+	return "200"
 
 
 """""""""EDITING POEMS"""""""""
@@ -78,7 +93,7 @@ def edit_a_poem(poem_id: str):
 	updatable_attributes = ("title", "body", "annotations", "description", "featured_poets", "thumbnail",
 							"languages", "collection", "tags")
 	string_attributes = ("title", "body", "description", "thumbnail", "collection", "languages")
-	
+
 	for attribute in replacement_data:
 		if attribute in updatable_attributes:
 			if attribute in string_attributes:
@@ -112,28 +127,28 @@ def edit_a_poem(poem_id: str):
 							existing_tag.save()
 							poem_document[attribute].append(existing_tag._id)
 				# TODO: Annotations edits will go here
-	
+
 	is_poem_saved = update_poem_document(poem_changes=poem_document)
 	if is_poem_saved:
 		return Response(200).to_json()
 	else:
 		return Response(500, reason="Something went wrong while saving your poem.").to_json()
-	
+
 
 """""""""DELETING POEMS"""""""""
 def delete_poem(poem_id):
 	auth_data = g.my_request_var["payload"]
 	account = get_from_collection(search_value=auth_data["email_address"], search_key="email_address", collection_name="accounts")
 	poem_id = bson.objectid.ObjectId(poem_id)
-	
+
 	if account:
 		poem = get_poem_document(str(poem_id))
 		if poem:
 			if account["_id"] == poem["author"]:
-				is_poem_deleted = delete_documents(search_value=poem_id, search_key="_id", collection_name="poems")
+				is_poem_deleted = delete_from_collection(search_value=poem_id, search_key="_id", collection_name="poems")
 				if is_poem_deleted:
 					# also delete the comments the were made for the poem
-					is_comments_deleted = delete_documents(search_value=poem_id, search_key="of", collection_name="comments")
+					is_comments_deleted = delete_from_collection(search_value=poem_id, search_key="of", collection_name="comments")
 					if is_comments_deleted:
 						return Response(200).to_json()
 					else:
@@ -146,7 +161,7 @@ def delete_poem(poem_id):
 			return Response(404, reason="Poem was not found in record.").to_json()
 	else:
 		return Response(404, reason="Your account was not found in record.").to_json()
-	
+
 
 """""""""REACTING TO POEMS"""""""""
 def react_to_poem(poem_id, reaction):

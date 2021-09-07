@@ -37,6 +37,7 @@ class Poem(Data):
 		if self.languages == None and is_draft == False:
 			# automatically detect the languages
 			self.languages = self.detect_language()
+			print(self.languages)
 
 		# default values
 		self.read_time = self.get_read_time().__str__()
@@ -56,14 +57,14 @@ class Poem(Data):
 		other_possible_tags = []
 		if self.featured_poets:
 			other_possible_tags.append("features")
-		
+
 		if self.audio_file:
 			other_possible_tags.append("audio")
-		
+
 		if self.collection:
 			other_possible_tags.append("collection")
-		
-		if self.languages and len(self.languages):
+
+		if self.languages and len(self.languages) > 0:
 			other_possible_tags.append(self.languages[0]["name"].lower())
 
 		if self.tags == None:
@@ -79,15 +80,17 @@ class Poem(Data):
 		languages = Detector(self.body).languages
 		result_languages = list()
 		for language in languages:
-			result_languages.append({
-				"code" : language.locale.getName(),
-				"name" : language.locale.getDisplayName() })
+			if language.locale.getDisplayName() != language.locale.getName():
+				result_languages.append({
+					"code" : language.locale.getName(),
+					"name" : language.locale.getDisplayName() })
+
 		return result_languages
 
 
 	def get_read_time(self):
 		return readtime.of_text(self.body)
-		
+
 
 	def parse_current_tags(self):
 		if self.tags and len(self.tags) > 0:
@@ -97,7 +100,7 @@ class Poem(Data):
 				if existing_tag == None:
 					tag_data = Tag(tag_name)
 					existing_tag = _Tag(**{**tag_data.__dict__, "_id": bson.objectid.ObjectId()})
-					
+
 				if type(existing_tag) == _Tag:
 					if self._id not in existing_tag.publishes:
 						existing_tag.publishes.append(self._id)
