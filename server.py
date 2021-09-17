@@ -139,6 +139,15 @@ def unauthenticated_poemsfeed():
     return PoemsController.unauthenticated_poemsfeed()
 
 
+"""GETTING A RANDOM POEM"""
+
+
+@server.route("/api/poems/feeling_lucky", methods=["GET"])
+@cross_origin()
+def feeling_lucky():
+    return PoemsController.feeling_lucky()
+
+
 """
 Upload resources manager.
 Handles file uploads and asset preview routes

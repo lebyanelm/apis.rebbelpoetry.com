@@ -3,6 +3,7 @@ import os
 import sys
 import mongoengine
 import readtime
+import random
 import bson
 from flask import request, g
 
@@ -329,3 +330,22 @@ def get_a_draft(did: str) -> str:
     else:
         return Response(404, reason="Original author was not found in record.").to_json()
         return Response(404, reason="Original author was not found in record.").to_json()
+
+
+"""GETTING A RANDOM POEM"""
+
+
+def feeling_lucky():
+    poems = get_from_collection(
+        search_value=None, search_key="_id", collection_name="poems", return_all=True)
+
+    # Get a random position index of the poem to send back
+    random_index = random.randint(0, len(poems) - 1)
+
+    if len(poems) > 0:
+        poem = Poem.to_dict(poems[random_index])
+        poem["author"] = str(poem["author"])
+
+        return Response(200, data=poem).to_json()
+    else:
+        return Response(500, reason="No poems are in record yet.").to_json()
