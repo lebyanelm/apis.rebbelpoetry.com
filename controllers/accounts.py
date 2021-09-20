@@ -141,21 +141,34 @@ def get_listed_author(author_ids) -> str:
     documents = list()
 
     for index, author_id in enumerate(author_ids):
-        author_ids[index] = bson.objectid.ObjectId(author_ids[index])
-        document = get_from_collection(
-            search_key="_id", search_value=author_ids[index], collection_name="accounts")
-
-        if document:
+        if author_id != "Anonymous":
+            author_ids[index] = bson.objectid.ObjectId(author_id)
+            document = get_from_collection(
+                search_key="_id", search_value=author_ids[index], collection_name="accounts")
+            if document:
+                author_ids[index] = bson.objectid.ObjectId(author_ids[index])
+                documents.append({
+                    "_id": str(document["_id"]),
+                    "display_name": document["display_name"],
+                    "display_photo": document["display_photo"],
+                    "follows": len(document["follows"]),
+                    "followers": len(document["followers"]),
+                    "poems": len(document["poems"]),
+                    "username": document["username"],
+                    "biography": document["biography"]})
+        else:
+            author_ids[index] = "anonymous"
             documents.append({
-                "_id": str(document["_id"]),
-                "display_name": document["display_name"],
-                "display_photo": document["display_photo"],
-                "follows": len(document["follows"]),
-                "followers": len(document["followers"]),
-                "poems": len(document["poems"]),
-                "username": document["username"],
-                "biography": document["biography"]})
+                "_id": "anonymous",
+                "display_name": "Anonymous",
+                "display_photo": "",
+                "follows": 0,
+                "followers": 0,
+                "poems": 0,
+                "username": "anonymous",
+                "biography": "I'm not to be known, I publish my poems under the hood to keep my identity hidden."})
 
+    print(documents)
     return Response(200, data=documents).to_json()
 
 
