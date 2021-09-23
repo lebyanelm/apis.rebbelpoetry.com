@@ -243,7 +243,6 @@ def get_a_draft(did: str):
 
 @server.route("/api/poems/<poem_id>/comments", methods=["GET"])
 @cross_origin()
-@is_authenticated
 def get_poem_comments(poem_id):
     query_params = query_string_to_dict(request.query_string.decode("ascii"))
     return CommentsController.get_poem_comments(poem_id, query_params.get("start"), query_params.get("limit"))
