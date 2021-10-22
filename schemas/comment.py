@@ -8,7 +8,7 @@ class Comment(Document):
 
     of = ObjectIdField()
     body = StringField()
-    commentor = ObjectIdField()
+    commenter = ObjectIdField()
     reply_of = ObjectIdField()
     replies = ListField(default=[])
 

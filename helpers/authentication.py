@@ -21,11 +21,13 @@ Helper functions to handle authentication
 """
 
 # authenticates a request and finds and returns a boolean if authenticated
+
+
 def is_authenticated(fn) -> bool:
     @wraps(fn)
     def decorator_fn(*args, **kwargs):
         authentication_data = request.headers.get('Authorization')
-
+        print("Authentication: ", authentication_data)
         # check if any request data has been provided (eg. Bearer <TOKEN>)
         if authentication_data != None:
             # get the authentication method provided. Only Bearer method allowed
@@ -36,7 +38,7 @@ def is_authenticated(fn) -> bool:
                 try:
                     token = authentication_data_split[1]
                     authentication_data_decoded = jwt.decode(token, os.environ['SECRET'],
-                        options={ "verify_signature": False, "verify_aud" : False, "verify_exp" : True })
+                                                             options={"verify_signature": False, "verify_aud": False, "verify_exp": True})
                     g.my_request_var = {}
                     g.my_request_var["payload"] = authentication_data_decoded
                     return fn(*args, **kwargs)
@@ -55,7 +57,7 @@ def is_authenticated(fn) -> bool:
 
 
 # -> Takes account data and removes data params that are sensative to the public
-def sanitize_account(account: Account, is_allow_sensitive = True) -> Account:
+def sanitize_account(account: Account, is_allow_sensitive=True) -> Account:
     if account.get('password') is not None:
         del account['password']
     if account.get('verification_codes') is not None:
@@ -92,11 +94,11 @@ def generate_token(email_address: str) -> str:
     now = datetime.utcnow()
     # set the expiry of the token to be 14 days
     expires = timedelta(days=14)
-    
+
     return ' '.join(['Bearer', jwt.encode(
         {
-            "email_address" : email_address,
-            "exp" : now + expires
+            "email_address": email_address,
+            "exp": now + expires
         },
         os.environ['SECRET'],
         algorithm="HS256")

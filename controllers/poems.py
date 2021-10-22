@@ -187,7 +187,7 @@ def delete_poem(poem_id):
 """""""""REACTING TO POEMS"""""""""
 
 
-def react_to_poem(poem_id, reaction):
+def react_to_poem(poem_id):
     auth_data = g.my_request_var["payload"]
     reactor = get_from_collection(
         search_value=auth_data["email_address"], search_key="email_address", collection_name="accounts")
@@ -196,19 +196,12 @@ def react_to_poem(poem_id, reaction):
         if poem:
             reactor_id = bson.objectid.ObjectId(reactor["_id"])
             # reset the reaction state of the user, if any
-            if reactor_id in poem["likes"]:
-                poem["likes"].remove(reactor_id)
-                poem["likes_count"] = len(poem["likes"])
-            elif reactor_id in poem["dislikes"]:
-                poem["dislikes"].remove(reactor_id)
-                poem["dislikes_count"] = len(poem["dislikes"])
-
-            if reaction == "like":
+            if not (reactor_id in poem["likes"]):
                 poem["likes"].append(reactor_id)
                 poem["likes_count"] = len(poem["likes"])
-            elif reaction == "dislike":
-                poem["dislikes"].append(reactor_id)
-                poem["dislikes_count"] = len(poem["dislikes"])
+            else:
+                poem["likes"].remove(reactor_id)
+                poem["likes_count"] = len(poem["likes"])
 
             is_poem_saved = update_poem_document(poem_changes=poem)
             if is_poem_saved:

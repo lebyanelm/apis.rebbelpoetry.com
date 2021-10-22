@@ -299,11 +299,11 @@ def delete_a_comment(comment_id):
 """""""REACTING TO A COMMENT"""""""
 
 
-@server.route("/api/poems/comments/<comment_id>/react/<reaction>", methods=["POST", "PUT"])
+@server.route("/api/poems/comments/<comment_id>/react", methods=["POST", "PUT"])
 @cross_origin()
 @is_authenticated
-def react_to_comment(comment_id, reaction):
-    return CommentsController.react_to_comment(comment_id, reaction)
+def react_to_comment(comment_id):
+    return CommentsController.react_to_comment(comment_id)
 
 
 """""""TODO: UPDATE A COMMENT"""""""

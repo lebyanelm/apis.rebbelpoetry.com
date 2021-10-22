@@ -8,7 +8,7 @@ class Comment(Data):
 
         self.of = data.get("of")
         self.body = data.get("body")
-        self.commentor = data.get("commentor")
+        self.commenter = data.get("commenter")
         self.reply_of = data.get("reply_of")
         self.replies = data.get("replies")
 

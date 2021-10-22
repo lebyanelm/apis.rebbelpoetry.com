@@ -24,10 +24,10 @@ def post_a_comment(poem_id: str) -> str:
     request_data = read_request_body(request)
     auth_data = g.my_request_var["payload"]
 
-    commentor = get_from_collection(
+    commenter = get_from_collection(
         search_value=auth_data["email_address"], search_key="email_address", collection_name="accounts")
-    if commentor:
-        request_data["commentor"] = commentor["_id"]
+    if commenter:
+        request_data["commenter"] = commenter["_id"]
         poem = get_from_collection(search_value=bson.objectid.ObjectId(
             poem_id), search_key="_id", collection_name="poems")
         if poem:
@@ -52,10 +52,10 @@ def post_a_comment(poem_id: str) -> str:
 
             is_poem_saved = update_poem_document(poem)
             if is_poem_saved:
-                is_commentor_saved = update_a_document(
-                    document_changes=commentor)
-                if is_commentor_saved:
-                    # prepare the response for being sent back to the commentor
+                is_commenter_saved = update_a_document(
+                    document_changes=commenter)
+                if is_commenter_saved:
+                    # prepare the response for being sent back to the commenter
                     response_data = comment.to_dict()
 
                     response_data["_id"] = str(comment_schema._id)
@@ -64,8 +64,8 @@ def post_a_comment(poem_id: str) -> str:
                         response_data["reply_of"] = str(
                             response_data["reply_of"])
 
-                    response_data["commentor"] = str(
-                        response_data["commentor"])
+                    response_data["commenter"] = str(
+                        response_data["commenter"])
 
                     return Response(200, data=response_data).to_json()
                 else:
@@ -83,7 +83,7 @@ def post_a_comment(poem_id: str) -> str:
 """""""""REACTING TO COMMENTS"""""""""
 
 
-def react_to_comment(comment_id: str, reaction: str) -> str:
+def react_to_comment(comment_id: str) -> str:
     auth_data = g.my_request_var["payload"]
     reactor = get_from_collection(search_value=auth_data.get(
         "email_address"), search_key="email_address", collection_name="accounts")
@@ -94,19 +94,12 @@ def react_to_comment(comment_id: str, reaction: str) -> str:
         if comment:
             reactor_id = bson.objectid.ObjectId(reactor["_id"])
             # reset the reaction state of the user, if any
-            if reactor_id in comment["likes"]:
-                comment["likes"].remove(reactor_id)
-                comment["likes_count"] = len(comment["likes"])
-            elif reactor_id in comment["dislikes"]:
-                comment["dislikes"].remove(reactor_id)
-                comment["dislikes_count"] = len(comment["dislikes"])
-
-            if reaction == "like":
+            if not (reactor_id in comment["likes"]):
                 comment["likes"].append(reactor_id)
                 comment["likes_count"] = len(comment["likes"])
-            elif reaction == "dislike":
-                comment["dislikes"].append(reactor_id)
-                comment["dislikes_count"] = len(comment["dislikes"])
+            else:
+                comment["likes"].remove(reactor_id)
+                comment["likes_count"] = len(comment["likes"])
 
             # update the comment
             is_comment_saved = update_a_document(
@@ -171,7 +164,7 @@ def edit_a_comment(comment_id):
         comment = get_from_collection(
             search_value=comment_id, search_key="_id", collection_name="comments")
         if comment:
-            if comment["commentor"] == account["_id"]:
+            if comment["commenter"] == account["_id"]:
                 if request_data.get("body"):
                     comment["body"] = request_data["body"]
                 is_comment_saved = update_a_document(
@@ -208,7 +201,7 @@ def get_poem_comments(poem_id, start=0, limit=10):
                 response_comments[index]["_id"])
             response_comments[index]["of"] = str(
                 response_comments[index]["of"])
-            response_comments[index]["commentor"] = str(
+            response_comments[index]["commenter"] = str(
                 response_comments[index]["of"])
             if response_comments[index].get("reply_of"):
                 response_comments[index]["reply_of"] = str(
