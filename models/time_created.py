@@ -10,7 +10,7 @@ class TimeCreated():
             date = datetime.datetime.fromtimestamp(timestamp)
 
         self.day = date.strftime('%d %A %B, %Y')
-        self.time = date.strftime('%H:%M:%S')
+        self.time = date.strftime('%I:%M %p')
 
         if timestamp:
             self.timestamp = timestamp
