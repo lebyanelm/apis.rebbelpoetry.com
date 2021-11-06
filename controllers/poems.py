@@ -13,6 +13,7 @@ from models.poem import Poem
 from models.response import Response
 from models.tag import Tag
 from models.draft import Draft
+from models.account import Account
 
 
 # helpers
@@ -323,6 +324,119 @@ def get_a_draft(did: str) -> str:
     else:
         return Response(404, reason="Original author was not found in record.").to_json()
         return Response(404, reason="Original author was not found in record.").to_json()
+
+
+"""SEARCHING A POEM WITH A KEYWORD"""
+
+
+def find_poem_from_keyword(keyword: str) -> str:
+    if keyword and len(keyword):
+        poems = get_from_collection(
+            search_value="", collection_name="poems", return_all=True)
+        authors = get_from_collection(
+            search_value="", collection_name="accounts", return_all=True)
+
+        # results to be returned
+        poem_results = []
+        poem_related_authors = []
+        author_results = []
+
+        # Most params in the poem have other nested object, this should help in
+        # digging deeper still in search of a string or number
+        def traverse_dict(object, original_object, search_word, results):
+            keys = object.keys() if type(object) == dict else range(len(object))
+
+            for object_key in keys:
+                if type(object[object_key]) in [str, dict, list, int, float]:
+
+                    # Continue traversing deeper if type is list or dict
+                    if type(object[object_key]) in [dict, list]:
+                        traverse_dict(
+                            object[object_key], original_object, search_word, results)
+                    else:
+
+                        # Compare the keyword and they object key value to find a match
+                        print("LOG: [SEARCH]: ", search_word,
+                              str(object[object_key]))
+                        if search_word in str(object[object_key]).lower():
+
+                            # Check if the item has not been added yet to prevent duplicate results
+                            if len(results):
+                                for result_item in results:
+                                    is_found_duplicate = False
+                                    if str(result_item["_id"]) == str(original_object["_id"]):
+                                        is_found_duplicate = True
+
+                                print(
+                                    "LOG: [SEARCH]: IS DUPLICATE FOUND?: ", is_found_duplicate)
+                                if is_found_duplicate != True:
+                                    results.append(original_object)
+                                    print("LOG: [SEARCH]: POEM AUTHOR ID",
+                                          original_object.get("author"))
+                                    if original_object.get("author"):
+                                        print(
+                                            "LOG: [SEARCH]: APPENDING RELATED AUTHOR ID:", original_object.get("author"))
+                                        if original_object.get("author") not in poem_related_authors:
+                                            poem_related_authors.append(
+                                                original_object.get("author"))
+                                    # No need to look into the rest of the object becuase
+                                    # duplcates are not accepted anyways.
+                                    break
+                            else:
+                                results.append(original_object)
+                                print("LOG: [SEARCH]: POEM AUTHOR ID",
+                                      original_object.get("author"))
+                                if original_object.get("author"):
+                                    print(
+                                        "LOG: [SEARCH]: APPENDING RELATED AUTHOR ID:", original_object.get("author"))
+                                    if original_object.get("author") not in poem_related_authors:
+                                        poem_related_authors.append(
+                                            original_object.get("author"))
+                                # No need to look into the rest of the object becuase
+                                # duplcates are not accepted anyways.
+                                break
+                            # Break the top loop. Since the match has been found
+                            # and it probably meas this part of the code is reached
+                            # becuase the result has been appended or ignored becuase of a duplicate.
+                            break
+
+        # Search all the poems using the string values in the poem attributes
+        for poem_item in poems:
+            traverse_dict(poem_item, Poem.to_dict(poem_item),
+                          keyword.lower(), poem_results)
+
+        # Search all the authors using the string values in the account attributes
+        for author_item in authors:
+            traverse_dict(author_item, Account.to_dict(author_item),
+                          keyword.lower(), author_results)
+
+        # Search all the authors using the authors whose poems have been found using string value
+        for poem_related_author in poem_related_authors:
+            print("LOG: [SEARCH]: SEARCHING FOR RELATED AUTHOR",
+                  poem_related_author, type(poem_related_author))
+            related_author = get_from_collection(search_value=bson.objectid.ObjectId(poem_related_author),
+                                                 search_key="_id", collection_name="accounts")
+            print("LOG: [SEARCH]: RELATED AUTHOR:", related_author)
+            if related_author:
+                if len(author_results):
+                    for author_result in author_results:
+                        is_duplicate_found = False
+                        if author_result.get("_id") == str(related_author.get("_id")):
+                            is_duplicate_found = True
+                        if not is_duplicate_found:
+                            author_results.append(
+                                Account.to_dict(related_author))
+                            break
+                else:
+                    author_results.append(Account.to_dict(related_author))
+
+        return Response(200, data=dict(poems=poem_results, authors=author_results),
+                        reason=f"With {len(poem_results) + len(author_results)} results.").to_json()
+
+    else:
+        return Response(400, reason="No search keyword was provided.").to_json()
+
+    return Response(500, reason="Something went wrong.").to_json()
 
 
 """GETTING A RANDOM POEM"""

@@ -275,6 +275,25 @@ def get_a_poem(poem_id):
         return Response(404, reason="Poem was not found in record.").to_json()
 
 
+"""""""SEARCHING POEMS"""""""
+
+
+@server.route("/api/search", methods=["GET"])
+@cross_origin()
+def search_poem() -> str:
+    # read from the query string of the request
+    request_query = query_string_to_dict(request.query_string.decode("ascii"))
+    keyword = request_query.get("keyword")
+
+    # if it consists of spaces it'll have + in place of those spaces remove the +
+    if "+" in keyword:
+        chars_to_replace = {"+": " "}
+        for key, value in chars_to_replace.items():
+            keyword = keyword.replace(key, value)
+
+    return PoemsController.find_poem_from_keyword(keyword)
+
+
 # Commentations on Poems
 """""""POSTING COMMENTS ON POEMS"""""""
 
