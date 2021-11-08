@@ -396,7 +396,7 @@ def find_poem_from_keyword(keyword: str) -> str:
                                 # duplcates are not accepted anyways.
                                 break
                             # Break the top loop. Since the match has been found
-                            # and it probably meas this part of the code is reached
+                            # and it probably means this part of the code is reached
                             # becuase the result has been appended or ignored becuase of a duplicate.
                             break
 
@@ -406,29 +406,33 @@ def find_poem_from_keyword(keyword: str) -> str:
                           keyword.lower(), poem_results)
 
         # Search all the authors using the string values in the account attributes
-        for author_item in authors:
-            traverse_dict(author_item, Account.to_dict(author_item),
-                          keyword.lower(), author_results)
+        # for author_item in authors:
+        #     traverse_dict(author_item, Account.to_dict(author_item),
+        #                   keyword.lower(), author_results)
 
         # Search all the authors using the authors whose poems have been found using string value
-        for poem_related_author in poem_related_authors:
-            print("LOG: [SEARCH]: SEARCHING FOR RELATED AUTHOR",
-                  poem_related_author, type(poem_related_author))
-            related_author = get_from_collection(search_value=bson.objectid.ObjectId(poem_related_author),
-                                                 search_key="_id", collection_name="accounts")
-            print("LOG: [SEARCH]: RELATED AUTHOR:", related_author)
-            if related_author:
-                if len(author_results):
-                    for author_result in author_results:
-                        is_duplicate_found = False
-                        if author_result.get("_id") == str(related_author.get("_id")):
-                            is_duplicate_found = True
-                        if not is_duplicate_found:
-                            author_results.append(
-                                Account.to_dict(related_author))
-                            break
-                else:
-                    author_results.append(Account.to_dict(related_author))
+        # for poem_related_author in poem_related_authors:
+        #     print("LOG: [SEARCH]: SEARCHING FOR RELATED AUTHOR",
+        #           poem_related_author, type(poem_related_author))
+
+        #     if poem_related_author == "Anonymous":
+        #         pass
+        #     else:
+        #         related_author = get_from_collection(search_value=bson.objectid.ObjectId(poem_related_author),
+        #                                              search_key="_id", collection_name="accounts")
+        #         print("LOG: [SEARCH]: RELATED AUTHOR:", related_author)
+        #         if related_author:
+        #             if len(author_results):
+        #                 for author_result in author_results:
+        #                     is_duplicate_found = False
+        #                     if author_result.get("_id") == str(related_author.get("_id")):
+        #                         is_duplicate_found = True
+        #                     if not is_duplicate_found:
+        #                         author_results.append(
+        #                             Account.to_dict(related_author))
+        #                         break
+        #             else:
+        #                 author_results.append(Account.to_dict(related_author))
 
         return Response(200, data=dict(poems=poem_results, authors=author_results),
                         reason=f"With {len(poem_results) + len(author_results)} results.").to_json()
