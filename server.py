@@ -170,11 +170,11 @@ def handle_resource_upload():
 @cross_origin()
 def get_upload_resource_urls(uploaded_resource):
     print(uploaded_resource != "default-avatar.png")
-    if uploaded_resource != "default-avatar.png":
+    if (uploaded_resource != "default-avatar.png" and uploaded_resource != "default-background.png"):
         return UploadsController.get_upload_resource_urls(uploaded_resource)
     else:
         default_avatar_path = "/".join([os.getcwd(),
-                                       "uploads", "default-avatar.png"])
+                                       "uploads", uploaded_resource])
         return send_file(default_avatar_path)
 
 
