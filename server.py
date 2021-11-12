@@ -194,7 +194,7 @@ def publish_a_poem(did: str):
 @server.route("/api/poems/<poem_id>", methods=["POST", "PUT", "PATCH"])
 @cross_origin()
 @is_authenticated
-def update_poem_document(poem_id: str):
+def update_poem_document_request(poem_id: str):
     return PoemsController.edit_a_poem(poem_id)
 
 
@@ -251,11 +251,11 @@ def get_poem_comments(poem_id):
 """""""REACTING TO A POEM"""""""
 
 
-@server.route("/api/poems/<poem_id>/react/<reaction>", methods=["POST", "PUT"])
+@server.route("/api/poems/<poem_id>/react", methods=["POST", "PUT"])
 @cross_origin()
 @is_authenticated
-def like_a_poem(poem_id, reaction):
-    return PoemsController.react_to_poem(poem_id, reaction)
+def like_a_poem(poem_id):
+    return PoemsController.react_to_poem(poem_id)
 
 
 """""""GETTING A POEM"""""""
@@ -266,7 +266,13 @@ def like_a_poem(poem_id, reaction):
 def get_a_poem(poem_id):
     poem = get_poem_document(poem_id)
     if poem:
+        # Update the number of views on the poem as it gets requested
+        poem["views_count"] = poem["views_count"] + 1
+        update_poem_document(poem_changes=poem)
+
+        # Convert the poem to a JSON-able datatype (dict) for response transports
         poem = Data.to_dict(poem)
+
         if poem.get("author"):
             poem["author"] = str(poem["author"])
 
@@ -292,6 +298,16 @@ def search_poem() -> str:
             keyword = keyword.replace(key, value)
 
     return PoemsController.find_poem_from_keyword(keyword)
+
+
+"""BOOKMARKING POEMS"""
+
+
+@server.route("/api/poems/bookmark", methods=["POST", "PUT"])
+@cross_origin()
+@is_authenticated
+def bookmark_a_poem():
+    return PoemsController.bookmark_a_poem()
 
 
 # Commentations on Poems

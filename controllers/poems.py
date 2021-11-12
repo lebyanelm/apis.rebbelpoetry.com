@@ -206,7 +206,10 @@ def react_to_poem(poem_id):
 
             is_poem_saved = update_poem_document(poem_changes=poem)
             if is_poem_saved:
-                return Response(200).to_json()
+                poem_likes = []
+                for like in poem["likes"]:
+                    poem_likes.append(str(like))
+                return Response(200, data=dict(likes_count=poem["likes_count"], likes=poem_likes)).to_json()
             else:
                 return Response(500, reason="Something went wrong while saving the poem.").to_json()
         else:
@@ -460,3 +463,61 @@ def feeling_lucky():
         return Response(200, data=poem).to_json()
     else:
         return Response(500, reason="No poems are in record yet.").to_json()
+
+
+"""""""""BOOKMARK POEMS"""""""""
+
+
+def bookmark_a_poem():
+    auth_data = g.my_request_var["payload"]
+    request_data = read_request_body(request)
+
+    # Check if the poem ID has been sent with the request
+    if request_data.get("pId") and auth_data.get("email_address"):
+        pId = bson.objectid.ObjectId(request_data.get("pId"))
+        # Ge the account that sent the request
+        account = get_from_collection(search_value=auth_data.get(
+            "email_address"), search_key="email_address", collection_name="accounts")
+        if account:
+            is_bookmark = False
+            # Check the poem ID exists in the bookmarked poems
+            if pId not in account["bookmarked_poems"]:
+                account["bookmarked_poems"].append(pId)
+                is_bookmark = True
+            else:
+                account["bookmarked_poems"].remove(pId)
+                is_bookmark = False
+
+            print("Is bookmarked poem:", is_bookmark)
+
+            # Update the changes on the account
+            is_updated = update_a_document(
+                document_changes=account, collection_name="accounts")
+            if is_updated:
+                # Update the number on the poem data
+                poem_document = get_poem_document(poem_id=pId)
+                if poem_document:
+                    if is_bookmark:
+                        poem_document["bookmarks_count"] = (
+                            poem_document["bookmarks_count"] + 1)
+                    else:
+                        poem_document["bookmarks_count"] = (
+                            poem_document["bookmarks_count"] - 1)
+
+                    is_poem_updated = update_poem_document(
+                        poem_changes=poem_document)
+                    if is_poem_updated:
+                        return Response(200, data=dict(bookmarks_count=poem_document["bookmarks_count"], is_bookmark=is_bookmark)).to_json()
+                    else:
+                        return Response(500, reason="Something went wrong while saving the poem.").to_json()
+                else:
+                    return Response(404, reason="The poem was not found in record.").to_json()
+        else:
+            return Response(404, reason="Your account was not found in record.").to_json()
+    else:
+        if request_data.get("email_address") == None:
+            return Response(400, reason="Invalid authentication provided. Please login again to fix this issue.").to_json()
+        else:
+            return Response(400, reason="The PoemID was not sent with the request.").to_json()
+
+    return Response(200).to_json()
