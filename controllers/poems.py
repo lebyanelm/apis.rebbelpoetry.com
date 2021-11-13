@@ -20,6 +20,7 @@ from models.account import Account
 from helpers.request import read_request_body
 from helpers.poems import get_poem_document, update_poem_document, get_tag_document, update_tag_document
 from helpers.database import get_from_collection, update_a_document, delete_from_collection
+from helpers.authentication import decode_authentication_token
 
 
 # schema
@@ -521,3 +522,36 @@ def bookmark_a_poem():
             return Response(400, reason="The PoemID was not sent with the request.").to_json()
 
     return Response(200).to_json()
+
+
+"""GETTING POEM TAGS"""
+
+
+def get_poem_tags(tags: str) -> str:
+    tags_split = tags.split(",")
+    response_tags = list()
+
+    # In means of tracking what type of poems the user clicks and likes
+    reader_track = request.headers.get("User-Track")
+    reader = None
+    if reader_track and len(reader_track) > 0:
+        # Tokens format = Bearer <TOKEN>, remove the "Bearer"
+        reader_track = reader_track.split(" ")
+        if len(reader_track) > 1:
+            reader_track = decode_authentication_token(reader_track[1])
+            reader = get_from_collection(search_value=reader_track.get("email_address"),
+                                         search_key="email_address", collection_name="accounts")
+
+    for tag in tags_split:
+        tag_document = get_from_collection(search_value=bson.objectid.ObjectId(
+            tag), search_key="_id", collection_name="tags")
+        if tag_document:
+            tag_document["reads_count"] = tag_document["reads_count"] + 1
+            if reader and reader.get("_id") not in tag_document["reads"]:
+                tag_document["reads"].append(reader.get("_id"))
+                reader["interests"].append(tag_document["_id"])
+
+        response_tags.append(
+            dict(_id=str(tag_document["_id"]), name=tag_document["name"].capitalize()))
+
+    return Response(200, data=response_tags).to_json()

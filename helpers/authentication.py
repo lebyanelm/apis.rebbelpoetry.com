@@ -37,8 +37,8 @@ def is_authenticated(fn) -> bool:
             if authentication_method == 'Bearer':
                 try:
                     token = authentication_data_split[1]
-                    authentication_data_decoded = jwt.decode(token, os.environ['SECRET'],
-                                                             options={"verify_signature": False, "verify_aud": False, "verify_exp": True})
+                    authentication_data_decoded = decode_authentication_token(
+                        token)
                     g.my_request_var = {}
                     g.my_request_var["payload"] = authentication_data_decoded
                     return fn(*args, **kwargs)
@@ -55,8 +55,16 @@ def is_authenticated(fn) -> bool:
             return Response(400, reason="No authentication provided.").to_json()
     return decorator_fn
 
+# Decodes a base64 token to it's raw data for authentication
+
+
+def decode_authentication_token(token: str, verify_exp=True) -> dict:
+    return jwt.decode(token, os.environ['SECRET'],
+                      options={"verify_signature": False, "verify_aud": False, "verify_exp": verify_exp})
 
 # -> Takes account data and removes data params that are sensative to the public
+
+
 def sanitize_account(account: Account, is_allow_sensitive=True) -> Account:
     if account.get('password') is not None:
         del account['password']

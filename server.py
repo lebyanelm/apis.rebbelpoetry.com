@@ -310,6 +310,16 @@ def bookmark_a_poem():
     return PoemsController.bookmark_a_poem()
 
 
+"""GETTING POEM TAGS"""
+# No authentication required.
+
+
+@server.route("/api/tags/<tags>", methods=["GET"])
+@cross_origin()
+def get_poem_tags(tags):
+    return PoemsController.get_poem_tags(tags)
+
+
 # Commentations on Poems
 """""""POSTING COMMENTS ON POEMS"""""""
 
