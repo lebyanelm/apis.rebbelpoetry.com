@@ -18,6 +18,7 @@ pyicu = "*"
 numpy = "*"
 pycld2 = "*"
 readtime = "*"
+gunicorn = "*"
 
 [dev-packages]
 
