@@ -93,10 +93,12 @@ def react_to_comment(comment_id: str) -> str:
             search_value=comment_id, search_key="_id", collection_name="comments")
         if comment:
             reactor_id = bson.objectid.ObjectId(reactor["_id"])
+            is_like = False
             # reset the reaction state of the user, if any
             if not (reactor_id in comment["likes"]):
                 comment["likes"].append(reactor_id)
                 comment["likes_count"] = len(comment["likes"])
+                is_like = True
             else:
                 comment["likes"].remove(reactor_id)
                 comment["likes_count"] = len(comment["likes"])
@@ -105,7 +107,7 @@ def react_to_comment(comment_id: str) -> str:
             is_comment_saved = update_a_document(
                 document_changes=comment, collection_name="comments")
             if is_comment_saved:
-                return Response(200).to_json()
+                return Response(200, data=dict(likes_count=comment["likes_count"], is_like=is_like)).to_json()
             else:
                 return Response(500, reason="Something went wrong while saving the comment.").to_json()
         else:

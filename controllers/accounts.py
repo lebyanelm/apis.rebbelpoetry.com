@@ -139,6 +139,7 @@ parsed in as an argument
 def get_listed_author(author_ids) -> str:
     author_ids = author_ids.rsplit(",")
     documents = list()
+    print("Getting authors:", author_ids)
 
     for index, author_id in enumerate(author_ids):
         if author_id != "Anonymous":
