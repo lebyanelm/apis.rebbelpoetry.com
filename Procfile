@@ -1,1 +1,1 @@
-web: gunicorn hello:app --preload
+web: gunicorn wsgi:app --bind 0.0.0.0:5000 --preload
