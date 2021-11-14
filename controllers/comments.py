@@ -204,7 +204,7 @@ def get_poem_comments(poem_id, start=0, limit=10):
             response_comments[index]["of"] = str(
                 response_comments[index]["of"])
             response_comments[index]["commenter"] = str(
-                response_comments[index]["of"])
+                response_comments[index]["commenter"])
             if response_comments[index].get("reply_of"):
                 response_comments[index]["reply_of"] = str(
                     response_comments[index]["reply_of"])
