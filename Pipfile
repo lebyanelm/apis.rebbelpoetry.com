@@ -5,7 +5,6 @@ name = "pypi"
 
 [packages]
 mongoengine = "*"
-pymongo = "*"
 python-dotenv = "*"
 flask = "*"
 flask-cors = "*"
@@ -19,6 +18,7 @@ numpy = "*"
 pycld2 = "*"
 readtime = "*"
 gunicorn = "*"
+pymongo = "*"
 
 [dev-packages]
 
