@@ -1,8 +1,1 @@
-xvfb
-fluxbox
-x11-xkb-utils
-xfonts-100dpi
-pkg-config
-icu4c
 python3-icu
-libicu-dev
