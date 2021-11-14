@@ -117,6 +117,7 @@ class Poem(Data):
         new_self_dictionary = Data.to_dict(self)
 
         # Custom parameters to poem model
-        new_self_dictionary["author"] = str(new_self_dictionary["author"])
+        if new_self_dictionary.get("author"):
+            new_self_dictionary["author"] = str(new_self_dictionary["author"])
 
         return new_self_dictionary
