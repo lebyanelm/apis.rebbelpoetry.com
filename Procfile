@@ -1,1 +1,1 @@
-web: pipenv run gunicorn wsg:app
+web: gunicorn wsg:app
