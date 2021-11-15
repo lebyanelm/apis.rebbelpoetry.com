@@ -20,6 +20,7 @@ readtime = "*"
 gunicorn = "*"
 pymongo = "*"
 setuptools = "*"
+bson = "*"
 
 [dev-packages]
 
