@@ -19,6 +19,7 @@ pycld2 = "*"
 readtime = "*"
 gunicorn = "*"
 pymongo = "*"
+setuptools = "*"
 
 [dev-packages]
 

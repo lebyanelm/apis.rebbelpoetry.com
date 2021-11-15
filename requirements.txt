@@ -28,3 +28,4 @@ readtime==1.1.1
 six==1.16.0
 soupsieve==2.3.1
 Werkzeug==2.0.2
+setuptools==39.1.0
