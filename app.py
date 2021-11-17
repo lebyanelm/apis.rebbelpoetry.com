@@ -411,4 +411,4 @@ def report_content(content_type, content_id):
 
 ######### SET THE SERVER TO RUN #########
 IS_DEBUG_MODE = os.environ["ENVIRONMENT"] == os.environ["DEVELOPMENT_MODE"]
-# server.run(debug=IS_DEBUG_MODE, host="localhost")
+server.run(debug=IS_DEBUG_MODE, host="localhost")

@@ -18,9 +18,8 @@ numpy = "*"
 pycld2 = "*"
 readtime = "*"
 gunicorn = "*"
-pymongo = "*"
 setuptools = "*"
-bson = "*"
+pymongo = "*"
 
 [dev-packages]
 
