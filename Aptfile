@@ -1,4 +1,4 @@
-icu
+libicu
 libicu-dev
 pkg-config
 python3-icu
