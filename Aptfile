@@ -1,3 +1,5 @@
+icu-i18n
+icu-config
 libicu-dev
 pkg-config
 python3-icu
