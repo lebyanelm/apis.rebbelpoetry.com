@@ -34,7 +34,7 @@ from helpers.request import read_request_body, query_string_to_dict
 ####### SERVER ENVIRONMENTAL VARIABLES SETUP ##########
 config = {**dotenv_values('.env.shared')}
 
-if config['ENVIRONMENT'] == config['DEVELOPMENT_MODE']:
+if os.environ.get("PRODUCTION_ENVIRONMENT") is None:
     config = {**config, **dotenv_values('.env.secret')}
 
 os.environ = {
@@ -44,8 +44,7 @@ os.environ = {
 
 
 ###### MAKE A DATABASE CONNECTION ########
-mongodb_client = mongo_connection.create_mongodb_connection(
-    os.environ['ENVIRONMENT'])
+mongodb_client = mongo_connection.create_mongodb_connection()
 
 
 ####### START A SERVER AND API ROUTES ########
@@ -409,6 +408,7 @@ def report_content(content_type, content_id):
         return Response(404, reason="Your account was not found in record.").to_json()
 
 
+print(os.environ)
 ######### SET THE SERVER TO RUN #########
-IS_DEBUG_MODE = os.environ["ENVIRONMENT"] == os.environ["DEVELOPMENT_MODE"]
+IS_DEBUG_MODE = os.environ.get("PRODUCTION_ENVIRONMENT") is None
 server.run(debug=IS_DEBUG_MODE, host="localhost")
