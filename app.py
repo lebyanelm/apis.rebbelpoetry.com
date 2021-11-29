@@ -5,6 +5,7 @@ import mongo_connection
 from dotenv import dotenv_values
 from flask import Flask, request, send_file, g
 from flask_cors import CORS, cross_origin
+from flask_mongoengine import MongoEngine
 
 
 # models
@@ -42,15 +43,19 @@ os.environ = {
     **config
 }
 
-
-###### MAKE A DATABASE CONNECTION ########
-mongodb_client = mongo_connection.create_mongodb_connection()
-
-
 ####### START A SERVER AND API ROUTES ########
 server = Flask(__name__, static_folder="./uploads/",
                static_url_path="/api/uploads/")
 CORS(server, resources={r"*": {"origins": "*"}})
+
+
+###### MAKE A DATABASE CONNECTION ########
+# mongodb_client = mongo_connection.create_mongodb_connection()
+if os.environ.get("PRODUCTION_ENVIRONMENT"):
+    server.config['MONGODB_HOST'] = os.environ.get("PRODUCTION_MONGODB")
+else:
+    server.config['MONGODB_HOST'] = os.environ.get("DEV_MONGODB")
+db = MongoEngine(server)
 
 
 ########## ACCOUNT FACILITATION AND USER MANAGEMENT ##########
