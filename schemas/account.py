@@ -1,10 +1,11 @@
 from mongoengine import Document, StringField, ListField, DictField, BooleanField, IntField, FloatField, ObjectIdField
 import mongoengine
 
+
 class Account(Document):
     _id = ObjectIdField(required=False)
 
-    email_address = StringField(unique=True)
+    email_address = StringField()
     display_name = StringField()
     username = StringField()
     password = StringField()
