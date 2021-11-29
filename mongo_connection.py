@@ -8,7 +8,7 @@ import pymongo as pymongo
 
 def create_mongodb_connection() -> pymongo.MongoClient:
     if os.environ.get("PRODUCTION_ENVIRONMENT"):
-        client = pymongo.MongoClient(host=os.environ['PROD_MONGODB'])
+        client = pymongo.MongoClient(host=os.environ['PRODUCTION_MONGODB'])
     else:
         client = mongoengine.connect(host=os.environ['DEV_MONGODB'])
     return client
