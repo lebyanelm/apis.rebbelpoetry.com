@@ -96,7 +96,7 @@ def sanitize_account(account: Account, is_allow_sensitive=True) -> Account:
 # -> Takes in a username and generates a Token for the username
 def generate_token(email_address: str) -> str:
     token_issuer = os.environ['DEV_API_ENDPOINT']
-    if (os.environ['ENVIRONMENT'] == os.environ['PRODUCTION_MODE']):
+    if (os.environ.get("PRODUCTION_ENVIRONMENT")):
         token_issuer = os.environ['PROD_API_ENDPOINT']
 
     now = datetime.utcnow()
