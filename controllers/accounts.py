@@ -250,9 +250,12 @@ def request_user_authentication():
                     email_address_regex, authorization_username)
 
                 # find the user acccount using either the username or email address
+                print("LOG: IS EMAIL LOGIN: ", is_username_email_address)
                 if is_username_email_address:
+                    print(authorization_username)
                     user_account = get_user(
                         email_address=authorization_username)
+                    print("LOG: ACCOUNT FOUND: WITH EMAIL: ", user_account)
                 else:
                     user_account = get_user(username=authorization_username)
 
