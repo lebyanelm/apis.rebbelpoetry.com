@@ -233,7 +233,7 @@ def unauthenticated_poemsfeed():
 
     for poem in poems:
         avg_scores["likes_count"] += poem["likes_count"]
-        # avg_scores["dislikes_count"] += poem["dislikes_count"]
+        avg_scores["dislikes_count"] += poem["dislikes_count"]
         avg_scores["comments_count"] += poem["comments_count"]
         avg_scores["shares_count"] += poem["shares_count"]
         avg_scores["reports_count"] += poem["reports_count"]
@@ -249,10 +249,13 @@ def unauthenticated_poemsfeed():
             avg = avg_scores[avg_param] / scores_count
             avg_score_difference = abs(avg - poem[avg_param])
 
+            print("POEM AVG:", avg, avg_score_difference)
+
             if poem not in recommended_poems:
-                if avg_score_difference >= 100:
+                if avg_score_difference >= 20:
                     recommended_poems.append(poem)
 
+    print(len(recommended_poems), "RECOMMENDED POEMS")
     return Response(200, data=recommended_poems).to_json()
 
 
