@@ -348,7 +348,7 @@ def find_poem_from_keyword(keyword: str) -> str:
         poem_related_authors = []
         author_results = []
 
-        # Most params in the poem have other nested object, this should help in
+        # Most params in the poem have other nested objects, this should help in
         # digging deeper still in search of a string or number
         def traverse_dict(object, original_object, search_word, results):
             keys = object.keys() if type(object) == dict else range(len(object))
@@ -369,9 +369,10 @@ def find_poem_from_keyword(keyword: str) -> str:
 
                             # Check if the item has not been added yet to prevent duplicate results
                             if len(results):
+                                print(results)
                                 for result_item in results:
                                     is_found_duplicate = False
-                                    if str(result_item["_id"]) == str(original_object["_id"]):
+                                    if str(result_item.get("_id")) == str(original_object.get("_id")):
                                         is_found_duplicate = True
 
                                 print(
@@ -383,8 +384,8 @@ def find_poem_from_keyword(keyword: str) -> str:
                                     if original_object.get("author"):
                                         print(
                                             "LOG: [SEARCH]: APPENDING RELATED AUTHOR ID:", original_object.get("author"))
-                                        if original_object.get("author") not in poem_related_authors:
-                                            poem_related_authors.append(
+                                        if original_object.get("author") not in author_results:
+                                            author_results.append(
                                                 original_object.get("author"))
                                     # No need to look into the rest of the object becuase
                                     # duplcates are not accepted anyways.
@@ -396,8 +397,8 @@ def find_poem_from_keyword(keyword: str) -> str:
                                 if original_object.get("author"):
                                     print(
                                         "LOG: [SEARCH]: APPENDING RELATED AUTHOR ID:", original_object.get("author"))
-                                    if original_object.get("author") not in poem_related_authors:
-                                        poem_related_authors.append(
+                                    if original_object.get("author") not in author_results:
+                                        author_results.append(
                                             original_object.get("author"))
                                 # No need to look into the rest of the object becuase
                                 # duplcates are not accepted anyways.
@@ -413,9 +414,14 @@ def find_poem_from_keyword(keyword: str) -> str:
                           keyword.lower(), poem_results)
 
         # Search all the authors using the string values in the account attributes
-        # for author_item in authors:
-        #     traverse_dict(author_item, Account.to_dict(author_item),
-        #                   keyword.lower(), author_results)
+        for author_item in authors:
+            traverse_dict(author_item, dict(
+                _id=str(author_item.get("_id")),
+                username=author_item.get("username"),
+                display_name=author_item.get("display_name"),
+                display_photo=author_item.get("display_photo")
+            ),
+                keyword.lower(), poem_related_authors)
 
         # Search all the authors using the authors whose poems have been found using string value
         # for poem_related_author in poem_related_authors:
@@ -441,7 +447,8 @@ def find_poem_from_keyword(keyword: str) -> str:
         #             else:
         #                 author_results.append(Account.to_dict(related_author))
 
-        return Response(200, data=dict(poems=poem_results, authors=author_results),
+        print(poem_related_authors)
+        return Response(200, data=dict(poems=poem_results, authors=poem_related_authors),
                         reason=f"With {len(poem_results) + len(author_results)} results.").to_json()
 
     else:
