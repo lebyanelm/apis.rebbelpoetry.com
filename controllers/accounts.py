@@ -346,3 +346,49 @@ def get_poet_poems(poet_id):
         return Response(404, reason="Account was not found in record.").to_json()
 
     return Response(200).to_json()
+
+
+# Follow another rebbel poet
+def follow_rebbel_poet(username):
+    # Authenticate the request to only accept follows from an authenticated source.
+    auth_data = g.my_request_var["payload"]
+    
+    if auth_data.get("email_address").split("@")[0] != username:
+        # Get the account of the rebbel making the following
+        follower_rebbel = get_from_collection(search_value=auth_data.get("email_address"), search_key="email_address")
+        rebbel_to_follow = get_from_collection(search_value=username, search_key="username")
+        
+        # Check if the rebbel being followed exists or doesn't exist in the follows list
+        if rebbel_to_follow.get("_id") not in follower_rebbel.get("follows"):
+            follower_rebbel["follows"].append(rebbel_to_follow.get("_id"))
+        else:
+            follower_rebbel["follows"].remove(rebbel_to_follow.get("_id"))
+
+        # Also apply the followers into the rebbel to follow
+        if follower_rebbel.get("_id") not in rebbel_to_follow.get("followers"):
+            rebbel_to_follow["followers"].append(follower_rebbel.get("_id"))
+        else:
+            rebbel_to_follow["followers"].remove(follower_rebbel.get("_id"))
+
+        # TODO: NOTIFY THE FOLLOWED REBBEL VIA EMAIL THAT THEY GOT FOLLOWED
+        # Make updates to the database version of the account
+        is_follower_updated = update_a_document(follower_rebbel, collection_name="accounts")
+        if is_follower_updated:
+            is_following_updated = update_a_document(rebbel_to_follow, collection_name="accounts")
+            if is_following_updated:
+                # Make the ObjectIds into strings
+                follows = [*follower_rebbel["follows"]]
+                for index, follow in enumerate(follows):
+                    print(index, follow)
+                    follows[index] = str(follow)
+                
+                return Response(200, data=follows).to_json()
+            else:
+                return Response(500, reason="Opps. Something went wrong.").to_json()
+        else:
+            return Response(500, reason="Opps. Something went wrong.").to_json()
+        
+    else:
+        return Response(400, reason="You can't follow yourself.").to_json()
+
+    return Response(500, reason="Opps. Something went wrong.").to_json()

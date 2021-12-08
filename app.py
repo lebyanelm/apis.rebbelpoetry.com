@@ -115,6 +115,14 @@ def request_user_profile(username):
     return AccountsController.request_user_profile(username)
 
 
+""""""" FOLLOWING ANOTHER REBBEL ACCOUNT """""""
+@server.route("/api/rebbels/follow/<username>", methods=["POST"])
+@cross_origin()
+@is_authenticated
+def follow_rebbel_poet(username: str) -> str:
+    return AccountsController.follow_rebbel_poet(username)
+    
+
 """""""GETTING A POET PUBLISHED POEMS"""""""
 
 
