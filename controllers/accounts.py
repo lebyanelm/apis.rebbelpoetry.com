@@ -295,14 +295,12 @@ def make_account_changes(email_address: str) -> str:
     try:
         if request_data:
             user_account = get_user(email_address)
-            print(user_account, email_address)
             # make sure the signature of the authentication of from the user
             if user_account:
                 if user_account["email_address"] == auth_data.get("email_address"):
                     # loop through every change request data item
                     for parameter in request_data:
-                        disallowed_parameters = ["password",
-                                                 "_schema_version_", "display_photo", "_id"]
+                        disallowed_parameters = ["password", "_schema_version_", "_id"]
                         # only make an update if the same parameter already exists in account
                         if parameter not in disallowed_parameters:
                             if user_account.get(parameter) is not None:
@@ -312,18 +310,20 @@ def make_account_changes(email_address: str) -> str:
                                     user_account[parameter] = request_data[parameter]
                     # save the changes to the database
                     is_saved = save_user_changes(changes=user_account)
+                    print("is user saved", is_saved)
                     if is_saved:
                         # send back the new data
                         response_data = sanitize_account(user_account)
-                        return Response(200, data=response_data).to_json()
+                        
+                        return Response(200, data=Account.to_dict(response_data)).to_json()
                     else:
-                        return Response(500, reason=RESPONSE_MESSAGES[500]).to_json()
+                        return Response(500).to_json()
                 else:
-                    return Response(403, reason=RESPONSE_MESSAGES[403]).to_json()
+                    return Response(403).to_json()
             else:
-                return Response(404, reason="Account is not found in record.").to_json()
+                return Response(404).to_json()
         else:
-            return Response(400, reason="Error. Received empty request.").to_json()
+            return Response(400).to_json()
     except:
         return Response(500).to_json()
 

@@ -82,8 +82,8 @@ def reauthenticate_user_session():
 
 
 @server.route("/api/rebbels/<email_address>", methods=["PATCH"])
-@is_authenticated
 @cross_origin()
+@is_authenticated
 def make_account_changes(email_address):
     return AccountsController.make_account_changes(email_address)
 

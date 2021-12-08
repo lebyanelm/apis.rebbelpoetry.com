@@ -26,7 +26,7 @@ def generate_resource_urls(resource_path: str, extension, is_audio=False) -> str
     half_resource_path = resource_path.split(strip_path)[1]
 
     # -> return the correct resource URL according to the environment of the source code
-    if os.environ["ENVIRONMENT"] == os.environ["PRODUCTION_MODE"]:
+    if os.environ.get("PRODUCTION"):
         uploads_url = "/".join([os.environ["PROD_UPLOADS"], half_resource_path])
     else:
         uploads_url = "/".join([os.environ["DEV_UPLOADS"], half_resource_path])
