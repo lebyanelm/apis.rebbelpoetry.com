@@ -242,7 +242,8 @@ def unauthenticated_poemsfeed():
 
     # Use an average score to determine which poems to recommend
     for poem in poems:
-        poem["author"] = str(poem["author"])
+        if poem.get("author"):
+            poem["author"] = str(poem["author"])
         poem = Poem.to_dict(poem)
 
         for avg_param in avg_scores:
