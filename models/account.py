@@ -20,7 +20,7 @@ class Account(Data):
             else:
                 sub_url = os.environ['PROD_API_ENDPOINT']
             self.display_photo = '/'.join([sub_url,
-                                          'uploads', 'default-avatar.png'])
+                                          'uploads', 'default-avatar.svg'])
         else:
             self.display_photo = data['display_photo']
 

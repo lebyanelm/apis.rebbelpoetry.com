@@ -181,8 +181,7 @@ def handle_resource_upload():
 @server.route("/api/uploads/<uploaded_resource>", methods=["GET"])
 @cross_origin()
 def get_upload_resource_urls(uploaded_resource):
-    print(uploaded_resource != "default-avatar.png")
-    if (uploaded_resource != "default-avatar.png" and uploaded_resource != "default-background.png"):
+    if (uploaded_resource != "default-avatar.svg" and uploaded_resource != "default-background.svg" and uploaded_resource != "anonymous-avatar.svg"):
         return UploadsController.get_upload_resource_urls(uploaded_resource)
     else:
         default_avatar_path = "/".join([os.getcwd(),
