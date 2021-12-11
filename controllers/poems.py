@@ -470,7 +470,8 @@ def feeling_lucky():
 
     if len(poems) > 0:
         poem = Poem.to_dict(poems[random_index])
-        poem["author"] = str(poem["author"])
+        if poem.get("author"):
+            poem["author"] = str(poem["author"])
 
         return Response(200, data=poem).to_json()
     else:
