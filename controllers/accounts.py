@@ -205,23 +205,48 @@ be hidden in the public eye. No authentication is required.
 
 
 def request_user_profile(username):
-    user_account_data = get_user(username=username)
-    if user_account_data:
-        # hide all poems that are published anonymously by this user before sending the data
-        for poem in user_account_data['poems']:
-            pass
-            # TODO: anonymous poems check expression here...
+    # Check for anonymous published poems
+    print(username)
+    if username == "anonymous":
+        # Get all the poems published by the anonymous users
+        anonymous_published_poems = get_from_collection(search_key="author", search_value=None, collection_name="poems", return_all=True)
+        anonymous_poems_list = list()
+        
+        # Only get the IDs of the poems
+        for anonymous_poem in anonymous_published_poems:
+            anonymous_poems_list.append(str(anonymous_poem.get("_id")))
 
-        # sanitize the account and send back the data
-        user_account_data = sanitize_account(
-            user_account_data, is_allow_sensitive=False)
+        # Create an anonymous rebbel account object
+        anonymous_rebbel = Account(dict(
+            email_address = "anonymous@rebbelpoetry.com",
+            display_name = "Anonymous Rebbel",
+            display_photo = "http://localhost:5000/api/uploads/anonymous-avatar.svg" if os.environ.get("PRODUCTION_ENVIRONMENT") == None else "https://apis.rebbelpoetry.com/api/uploads/anonymous-avatar.png",
+            poems = anonymous_poems_list,
+            password = "nopassword"
+        ))
 
-        # send the data back
-        user_account_data = Account.to_dict(user_account_data)
-        return Response(200, data=user_account_data).to_json()
+        del anonymous_rebbel.password
+
+        # Return the anonymous account as return data
+        return Response(200, data=Account.to_dict(anonymous_rebbel)).to_json()
     else:
-        return Response(404).to_json()
-    return Response(200).to_json()
+        user_account_data = get_user(username=username)
+        if user_account_data:
+            # hide all poems that are published anonymously by this user before sending the data
+            for poem in user_account_data['poems']:
+                pass
+                # TODO: anonymous poems check expression here...
+
+            # sanitize the account and send back the data
+            user_account_data = sanitize_account(
+                user_account_data, is_allow_sensitive=False)
+
+            # send the data back
+            user_account_data = Account.to_dict(user_account_data)
+            return Response(200, data=user_account_data).to_json()
+        else:
+            return Response(404).to_json()
+    Response(404).to_json()
 
 
 """
