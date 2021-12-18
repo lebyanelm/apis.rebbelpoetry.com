@@ -253,7 +253,7 @@ def unauthenticated_poemsfeed():
             print("POEM AVG:", avg, avg_score_difference)
 
             if poem not in recommended_poems:
-                if avg_score_difference >= 20:
+                if avg_score_difference >= 20 or avg_score_difference == 0:
                     recommended_poems.append(poem)
 
     print(len(recommended_poems), "RECOMMENDED POEMS")
